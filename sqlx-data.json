@@ -1,0 +1,142 @@
+{
+  "db": "PostgreSQL",
+  "1cf53df892b244a3ab29589752a0f11db3a5832d0cf7f4c15dacac152ccd6b75": {
+    "query": "\n                INSERT INTO photos\n                    (title, file_stem, taken_timestamp, height_offset, tags, published)\n                VALUES\n                    ($1, $2, $3, $4, $5, $6)\n                RETURNING\n                    id\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Int4",
+          "VarcharArray",
+          "Bool"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "2f97f1cd2551270c1e18bd6727e9bd83a562039d59e89572c0ee27d2207bac22": {
+    "query": "\n                    UPDATE\n                        photos\n                    SET\n                        taken_timestamp = $2\n                    WHERE\n                        id = $1\n                ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Varchar"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "40f65093221ba445e529a850857fe066407c950044fb14c4f89384a51dc55833": {
+    "query": "\n                        INSERT INTO sources\n                            (photo_id, width, height, url)\n                        VALUES\n                            ($1, $2, $3, $4)\n                    ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4",
+          "Int4",
+          "Varchar"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "55cf8664626623eec33a7ca0a37448505dc63901ef60e7bddd709b19a819b689": {
+    "query": "\n                UPDATE\n                    photos\n                SET\n                    published = $1\n                WHERE\n                    photos.id = $2\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Bool",
+          "Int4"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "6e2a97df99897030025796d87ed9f80dc3182db6b885dba0302317844d355240": {
+    "query": "\n                    UPDATE\n                        photos\n                    SET\n                        tags = $2\n                    WHERE\n                        id = $1\n                ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "VarcharArray"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "ba1dd7b37aea99609cac4ad1a8e004e47d75bac910d95b1bca1a0d82d1721e60": {
+    "query": "\n                    DELETE FROM\n                        sources\n                    WHERE\n                        photo_id = $1\n                ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "be5aca1e2bf9e03ef169fa62316dbe43580d15154c0a25964f6985f596da87bb": {
+    "query": "\n                    INSERT INTO sources\n                        (photo_id, width, height, url)\n                    VALUES\n                        ($1, $2, $3, $4)\n                ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4",
+          "Int4",
+          "Varchar"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "de95290441d344e0ad119feb59b8f600df6e9e458c1569ddee5815997c4ef10a": {
+    "query": "\n                    UPDATE\n                        photos\n                    SET\n                        title = $2\n                    WHERE\n                        id = $1\n                ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Varchar"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "fb910782cc7487844aa554d7c9663dc1558c9ec83952cc3924fcc64d2825bc9e": {
+    "query": "\n                SELECT\n                    secret_key\n                FROM\n                    secret_keys\n                WHERE\n                    secret_key = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "secret_key",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  }
+}

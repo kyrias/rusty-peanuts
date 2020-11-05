@@ -1,0 +1,22 @@
+[package]
+name = "rusty-peanuts-cli"
+version = "0.1.0"
+authors = ["Johannes Löthberg <johannes@kyriasis.com>"]
+edition = "2018"
+default-run = "rusty-peanuts-cli"
+
+[dependencies]
+image = "0.23.11"
+mozjpeg = "0.8.20"
+tiff = "0.6.0"
+rust-s3 = "0.26.3"
+async-std = { version = "1.7.0", features = ["attributes", "unstable"] }
+surf = "2.1.0"
+serde = "1.0.117"
+quick-xml = { version = "0.20.0", features = ["serialize"] }
+env_logger = "0.8.1"
+log = "0.4.11"
+dotenv = "0.15.0"
+structopt = "0.3.20"
+
+rusty-peanuts-api-structs = { path = "../rusty-peanuts-api-structs" }

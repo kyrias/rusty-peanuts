@@ -1,0 +1,8 @@
+[package]
+name = "rusty-peanuts-api-structs"
+version = "0.1.0"
+authors = ["Johannes Löthberg <johannes@kyriasis.com>"]
+edition = "2018"
+
+[dependencies]
+serde = "1.0.117"

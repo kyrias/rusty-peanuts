@@ -1,0 +1,28 @@
+[package]
+name = "rusty-peanuts"
+version = "0.1.0"
+authors = ["Johannes Löthberg <johannes@kyriasis.com>"]
+license = "MIT OR Apache-2.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tide = { version = "0.14.0", default-features = false, features = ["h1-server", "logger"] }
+async-std = { version = "1.7.0", features = ["attributes"] }
+serde = { version = "1.0.117", features = ["derive"] }
+sqlx = { version = "0.4.0-beta.1", features = ["postgres", "json", "offline", "time"] }
+num_cpus = "1.13.0"
+serde_json = "1.0.59"
+async-trait = "0.1.41"
+dotenv = "0.15.0"
+tera = { version = "1.5.0", default-features = false, features = ["builtins"] }
+time = { version = "0.2.22", default-features = false, features = ["serde"] }
+serde_qs = "0.7.0"
+percent-encoding = "2.1.0"
+structopt = "0.3.20"
+
+rusty-peanuts-api-structs = { path = "rusty-peanuts-api-structs" }
+
+[workspace]
+members = ["rusty-peanuts-api-structs", "rusty-peanuts-cli"]
