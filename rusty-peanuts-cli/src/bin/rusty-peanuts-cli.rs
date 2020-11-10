@@ -202,25 +202,11 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         }));
     }
 
-    let file_name = args
-        .file_path
-        .file_name()
-        .expect("couldn't get file stem from path")
-        .to_string_lossy();
     let file_stem = args
         .file_path
         .file_stem()
         .expect("couldn't get file stem from path")
         .to_string_lossy();
-
-    let target_path = format!("{}/{}", file_stem, file_name);
-    log::info!("Uploading original file to S3: {}", &target_path);
-
-    let code = bucket
-        .put_object_stream_blocking(&args.file_path, &target_path)
-        .expect("could not upload file");
-    assert!(code >= 200 && code < 300);
-    log::info!("Uploading original file to S3 finished");
 
     let mut sources = Vec::new();
     for handle in task_handles {
