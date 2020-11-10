@@ -11,6 +11,9 @@ pub(super) fn mount(mut route: tide::Route<crate::State>) {
     route
         .at("/photo/by-id/:photo_id/published")
         .post(update_photo_published);
+    route
+        .at("/photo/by-id/:photo_id/height-offset")
+        .post(update_photo_height_offset);
 
     route.at("/photo/by-filestem/:file_stem").post(update_photo);
 }
@@ -131,4 +134,25 @@ async fn update_photo_published(mut req: Request<crate::State>) -> tide::Result<
             "published": published,
         }))
         .build())
+}
+
+async fn update_photo_height_offset(mut req: Request<crate::State>) -> tide::Result<Response> {
+    let state = req.state();
+    let mut conn = state.db.acquire().await.unwrap();
+
+    require_valid_secret_key!(req, conn);
+
+    let height_offset: u8 = req.body_json().await?;
+    tide::log::debug!("Received payload: {:#?}", height_offset);
+
+    let photo_id: i32 = req.param("photo_id")?.parse()?;
+    let photo = match conn.get_photo_by_id(photo_id, Published::All).await? {
+        Some(photo) => photo,
+        None => return Ok(Response::builder(tide::http::StatusCode::NotFound).build()),
+    };
+
+    conn.set_photo_height_offset(photo.id, height_offset)
+        .await?;
+
+    Ok(Response::builder(tide::http::StatusCode::NoContent).build())
 }

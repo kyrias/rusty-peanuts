@@ -108,6 +108,12 @@ pub trait PhotoProvider {
         photo_id: PhotoId,
         published: bool,
     ) -> Result<(), sqlx::Error>;
+
+    async fn set_photo_height_offset(
+        &mut self,
+        photo_id: PhotoId,
+        height_offset: u8,
+    ) -> Result<(), sqlx::Error>;
 }
 
 #[async_trait::async_trait]
@@ -574,6 +580,30 @@ impl PhotoProvider for PgConnection {
                     photos.id = $2
             "#,
             published,
+            photo_id,
+        )
+        .execute(self)
+        .await?;
+
+        Ok(())
+    }
+
+
+    async fn set_photo_height_offset(
+        &mut self,
+        photo_id: PhotoId,
+        height_offset: u8,
+    ) -> Result<(), sqlx::Error> {
+        sqlx::query!(
+            r#"
+                UPDATE
+                    photos
+                SET
+                    height_offset = $1
+                WHERE
+                    photos.id = $2
+            "#,
+            height_offset as i32,
             photo_id,
         )
         .execute(self)

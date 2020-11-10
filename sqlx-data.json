@@ -66,6 +66,19 @@
       "nullable": []
     }
   },
+  "6df91d1005d5a745dc5abc90ee6490c02aac2dc653cb440b0ff11cfd3e86585e": {
+    "query": "\n                UPDATE\n                    photos\n                SET\n                    height_offset = $1\n                WHERE\n                    photos.id = $2\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "6e2a97df99897030025796d87ed9f80dc3182db6b885dba0302317844d355240": {
     "query": "\n                    UPDATE\n                        photos\n                    SET\n                        tags = $2\n                    WHERE\n                        id = $1\n                ",
     "describe": {
