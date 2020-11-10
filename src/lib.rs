@@ -1,5 +1,3 @@
-#![feature(proc_macro_hygiene)]
-
 use std::sync::Arc;
 
 use structopt::StructOpt;
