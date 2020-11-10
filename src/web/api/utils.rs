@@ -12,7 +12,7 @@ pub async fn validate_secret_key(
         None => return Ok(None),
     };
 
-    let parts: Vec<_> = auth.last().as_str().splitn(2, " ").collect();
+    let parts: Vec<_> = auth.last().as_str().splitn(2, ' ').collect();
 
     if parts[0] == "Bearer" && conn.valid_secret_key(parts[1]).await? {
         return Ok(Some(true));

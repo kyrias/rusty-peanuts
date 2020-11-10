@@ -144,7 +144,7 @@ impl PhotoProvider for PgConnection {
                         "#,
                     bind_count,
                 ));
-                bind_count = bind_count + 1;
+                bind_count += 1;
                 bind_values.push(BindValue::U32(photo_id));
             },
 
@@ -156,7 +156,7 @@ impl PhotoProvider for PgConnection {
                         "#,
                     bind_count,
                 ));
-                bind_count = bind_count + 1;
+                bind_count += 1;
                 bind_values.push(BindValue::U32(photo_id));
             },
 
@@ -177,7 +177,7 @@ impl PhotoProvider for PgConnection {
                     "#,
                 bind_count,
             ));
-            bind_count = bind_count + 1;
+            bind_count += 1;
             bind_values.push(BindValue::ArrayString(&tags[..]));
         }
 
@@ -203,7 +203,7 @@ impl PhotoProvider for PgConnection {
         // Necessary if any more bind variables are added in this function, but leaving it
         // uncommented leads to the complainer complaining, and attributes on expressions are
         // experimental so can't disable the lint without enabling that.
-        //bind_count = bind_count + 1;
+        //bind_count += 1;
         bind_values.push(BindValue::I64(limit));
 
         let mut query = sqlx::query_as(&query);
@@ -284,7 +284,7 @@ impl PhotoProvider for PgConnection {
         .to_string();
 
         if published == Published::OnlyPublished {
-            query.push_str(&format!("    AND photo.published = 't'\n"))
+            query.push_str("    AND photo.published = 't'\n")
         }
 
         query.push_str(
@@ -326,7 +326,7 @@ impl PhotoProvider for PgConnection {
         .to_string();
 
         if published == Published::OnlyPublished {
-            query.push_str(&format!("    AND photo.published = 't'\n"))
+            query.push_str("    AND photo.published = 't'\n")
         }
 
         query.push_str(
@@ -375,12 +375,12 @@ impl PhotoProvider for PgConnection {
             // Necessary if any more bind variables are added in this function, but leaving it
             // uncommented leads to the complainer complaining, and attributes on expressions are
             // experimental so can't disable the lint without enabling that.
-            //bind_count = bind_count + 1;
+            //bind_count += 1;
             bind_values.push(BindValue::ArrayString(tags));
         }
 
         if published == Published::OnlyPublished {
-            query.push_str(&format!("    AND photo.published = 't'\n"))
+            query.push_str("    AND photo.published = 't'\n")
         }
 
         query.push_str(
