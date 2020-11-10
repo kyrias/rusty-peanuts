@@ -30,7 +30,7 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
-          components: rustfmt, clippy
+          components: clippy
 
       - name: cargo build
         uses: actions-rs/cargo@v1
@@ -43,12 +43,6 @@ jobs:
         with:
           command: test
           args: --workspace
-
-      - name: cargo fmt check
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
 
       - name: cargo clippy
         uses: actions-rs/cargo@v1
