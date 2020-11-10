@@ -66,10 +66,25 @@ pub struct SetPublishedArgs {
 }
 
 #[derive(StructOpt)]
+pub struct SetHeightOffsetArgs {
+    #[structopt(flatten)]
+    api_arguments: SharedApiArgs,
+
+    /// Photo ID to change published state on.
+    #[structopt(name = "PHOTO_ID")]
+    photo_id: u32,
+
+    /// Whether to publish or unpublish the photo.
+    #[structopt(name = "HEIGHT_OFFSET")]
+    height_offset: u8,
+}
+
+#[derive(StructOpt)]
 pub enum Command {
     Upload(UploadArgs),
     Update(UploadArgs),
     SetPublished(SetPublishedArgs),
+    SetHeightOffset(SetHeightOffsetArgs),
 }
 
 fn decode_image(file: &std::fs::File) -> (image::DynamicImage, image::ImageFormat) {
@@ -258,7 +273,7 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         .body(surf::Body::from_json(&payload).expect("couldn't serialize body"))
         .await
         .expect("couldn't send POST request to rusty-peanuts API");
-    log::debug!("Rusty-peanuts API response: {:?}", res);
+    log::debug!("Rusty-peanuts API response: {:#?}", res);
 
     let status = res.status();
     assert!(!status.is_client_error() && !status.is_server_error());
@@ -279,7 +294,25 @@ async fn set_published(args: SetPublishedArgs) -> std::io::Result<()> {
         .body(surf::Body::from_json(&args.published).expect("couldn't serialize body"))
         .await
         .expect("couldn't send POST request to rusty-peanuts API");
-    log::debug!("Rusty-peanuts API response: {:?}", res);
+    log::debug!("Rusty-peanuts API response: {:#?}", res);
+
+    Ok(())
+}
+
+async fn set_height_offset(args: SetHeightOffsetArgs) -> std::io::Result<()> {
+    let url = format!(
+        "{}/api/v1/photo/by-id/{}/height-offset",
+        args.api_arguments.endpoint, args.photo_id,
+    );
+    let res = surf::post(url)
+        .header(
+            "Authorization",
+            format!("Bearer {}", args.api_arguments.secret_key),
+        )
+        .body(surf::Body::from_json(&args.height_offset).expect("couldn't serialize body"))
+        .await
+        .expect("couldn't send POST request to rusty-peanuts API");
+    log::debug!("Rusty-peanuts API response: {:#?}", res);
 
     Ok(())
 }
@@ -293,5 +326,6 @@ async fn main() -> std::io::Result<()> {
         Command::Upload(args) => upload_photo(args, false).await,
         Command::Update(args) => upload_photo(args, true).await,
         Command::SetPublished(args) => set_published(args).await,
+        Command::SetHeightOffset(args) => set_height_offset(args).await,
     }
 }
