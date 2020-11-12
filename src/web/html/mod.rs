@@ -104,7 +104,10 @@ async fn gallery(req: Request<crate::State>) -> tide::Result<Response> {
     .expect("could not encode newest pagination query string");
 
     let mut context = tera::Context::new();
-    context.insert("title", "gallery");
+    match tagged {
+        Some(tag) => context.insert("title", &format!("tagged {}", tag[0])),
+        None => context.insert("title", "gallery"),
+    }
     context.insert("photos", &photos);
     context.insert("newest_qs", &newest_qs);
     context.insert("newer_qs", &newer_qs);
