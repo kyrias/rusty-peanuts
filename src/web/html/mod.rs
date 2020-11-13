@@ -138,7 +138,10 @@ async fn photo(req: Request<crate::State>) -> tide::Result<Response> {
     };
 
     let mut context = tera::Context::new();
-    context.insert("title", &format!("photo #{}", photo_id));
+    match photo.title {
+        Some(ref title) => context.insert("title", &title),
+        None => context.insert("title", "Untitled"),
+    }
     context.insert("photo", &photo);
 
     let body = state.tera.render("photo.html", &context)?;
