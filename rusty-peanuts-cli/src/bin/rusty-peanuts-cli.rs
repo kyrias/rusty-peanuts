@@ -265,7 +265,7 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
     } else {
         format!("{}/api/v1/photos", args.api_arguments.endpoint)
     };
-    let res = surf::post(url)
+    let mut res = surf::post(url)
         .header(
             "Authorization",
             format!("Bearer {}", args.api_arguments.secret_key),
@@ -273,7 +273,10 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         .body(surf::Body::from_json(&payload).expect("couldn't serialize body"))
         .await
         .expect("couldn't send POST request to rusty-peanuts API");
+    let body: serde_json::Value = res.body_json().await
+        .unwrap();
     log::debug!("Rusty-peanuts API response: {:#?}", res);
+    log::debug!("Rusty-peanuts API body: {:#?}", body);
 
     let status = res.status();
     assert!(!status.is_client_error() && !status.is_server_error());
