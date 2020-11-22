@@ -50,7 +50,7 @@ pub struct UploadArgs {
     static_host: String,
 
     /// Only update metadata.
-    #[structopt(long, env = "RUSTY_PEANUTS_ONLY_UPDATE_MATADATA")]
+    #[structopt(long)]
     only_update_metadata: bool,
 
     /// Path to photo file to upload.
