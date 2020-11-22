@@ -4,6 +4,7 @@ use image::GenericImageView;
 use s3::bucket::Bucket;
 use s3::creds::Credentials;
 use structopt::StructOpt;
+use surf::StatusCode;
 
 use rusty_peanuts_api_structs::{PhotoPayload, Source};
 use rusty_peanuts_cli::xmp::get_metadata;
@@ -130,6 +131,29 @@ fn encode_jpeg(image: &image::DynamicImage) -> (Vec<u8>, u32, u32) {
 }
 
 async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
+    let auth_header = format!("Bearer {}", args.api_arguments.secret_key);
+    let file_stem = args
+        .file_path
+        .file_stem()
+        .expect("couldn't get file stem from path")
+        .to_string_lossy();
+
+    if !update {
+        log::info!("Checking whether photo has already been uploaded");
+        let url = format!(
+            "{}/api/v1/photo/by-filestem/{}",
+            args.api_arguments.endpoint, file_stem
+        );
+        let res = surf::get(url)
+            .header("Authorization", &auth_header)
+            .await
+            .expect("couldn't send GET request to rusty-peanuts API");
+        if res.status() == StatusCode::Ok {
+            log::error!("Photo with filestem {} already exists", file_stem);
+            std::process::exit(1);
+        }
+    }
+
     let credentials = Credentials::new(
         Some(&args.s3_access_key_id),
         Some(&args.s3_secret_access_key),
@@ -217,12 +241,6 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         }));
     }
 
-    let file_stem = args
-        .file_path
-        .file_stem()
-        .expect("couldn't get file stem from path")
-        .to_string_lossy();
-
     let mut sources = Vec::new();
     for handle in task_handles {
         let (jpeg_data, width, height) = handle.await;
@@ -267,10 +285,7 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         format!("{}/api/v1/photos", args.api_arguments.endpoint)
     };
     let mut res = surf::post(url)
-        .header(
-            "Authorization",
-            format!("Bearer {}", args.api_arguments.secret_key),
-        )
+        .header("Authorization", &auth_header)
         .body(surf::Body::from_json(&payload).expect("couldn't serialize body"))
         .await
         .expect("couldn't send POST request to rusty-peanuts API");
