@@ -9,7 +9,7 @@ default-run = "rusty-peanuts-cli"
 image = "0.23.11"
 mozjpeg = "0.8.20"
 tiff = "0.6.0"
-rust-s3 = { version = "0.26.3", features = ["no-verify-ssl"] }
+rust-s3 = { version = "0.27.0-beta1", default-features = false, features = ["no-verify-ssl", "with-async-std"] }
 async-std = { version = "1.7.0", features = ["attributes", "unstable"] }
 surf = "2.1.0"
 serde = "1.0.117"

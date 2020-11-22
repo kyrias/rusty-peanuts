@@ -230,7 +230,8 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
 
         let target_path = format!("{}/{}.{}x{}.jpeg", file_stem, file_stem, width, height,);
         let (_, code) = bucket
-            .put_object_with_content_type_blocking(&target_path, &jpeg_data, "image/jpeg")
+            .put_object_with_content_type(&target_path, &jpeg_data, "image/jpeg")
+            .await
             .expect("could not upload file");
         assert!(code >= 200 && code < 300);
 
