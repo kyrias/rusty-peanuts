@@ -11,5 +11,5 @@ pub struct PhotoPayload {
     pub title: Option<String>,
     pub taken_timestamp: Option<String>,
     pub tags: Vec<String>,
-    pub sources: Vec<Source>,
+    pub sources: Option<Vec<Source>>,
 }

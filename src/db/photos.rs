@@ -527,36 +527,38 @@ impl PhotoProvider for PgConnection {
             .await?;
         }
 
-        if old_photo.sources != new_photo.sources {
-            tide::log::info!("Sources differ, updating");
-            changed = true;
-            sqlx::query!(
-                r#"
-                    DELETE FROM
-                        sources
-                    WHERE
-                        photo_id = $1
-                "#,
-                old_photo.id,
-            )
-            .execute(&mut trans)
-            .await?;
-
-            for source in &new_photo.sources {
+        if let Some(sources) = &new_photo.sources {
+            if &old_photo.sources != sources {
+                tide::log::info!("Sources differ, updating");
+                changed = true;
                 sqlx::query!(
                     r#"
-                        INSERT INTO sources
-                            (photo_id, width, height, url)
-                        VALUES
-                            ($1, $2, $3, $4)
+                        DELETE FROM
+                            sources
+                        WHERE
+                            photo_id = $1
                     "#,
                     old_photo.id,
-                    source.width as i32,
-                    source.height as i32,
-                    source.url,
                 )
                 .execute(&mut trans)
                 .await?;
+
+                for source in sources {
+                    sqlx::query!(
+                        r#"
+                            INSERT INTO sources
+                                (photo_id, width, height, url)
+                            VALUES
+                                ($1, $2, $3, $4)
+                        "#,
+                        old_photo.id,
+                        source.width as i32,
+                        source.height as i32,
+                        source.url,
+                    )
+                    .execute(&mut trans)
+                    .await?;
+                }
             }
         }
 

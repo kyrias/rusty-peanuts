@@ -1,5 +1,17 @@
 {
   "db": "PostgreSQL",
+  "0d5fa2f5b18286513e44a687bed23f182e617f639b43411af7830a227329fac1": {
+    "query": "\n                        DELETE FROM\n                            sources\n                        WHERE\n                            photo_id = $1\n                    ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "1cf53df892b244a3ab29589752a0f11db3a5832d0cf7f4c15dacac152ccd6b75": {
     "query": "\n                INSERT INTO photos\n                    (title, file_stem, taken_timestamp, height_offset, tags, published)\n                VALUES\n                    ($1, $2, $3, $4, $5, $6)\n                RETURNING\n                    id\n            ",
     "describe": {
@@ -40,6 +52,21 @@
   },
   "40f65093221ba445e529a850857fe066407c950044fb14c4f89384a51dc55833": {
     "query": "\n                        INSERT INTO sources\n                            (photo_id, width, height, url)\n                        VALUES\n                            ($1, $2, $3, $4)\n                    ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4",
+          "Int4",
+          "Varchar"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "550a77524200327d47bb5e117d3b797c4e33c7fbb905cfbde3959eae211ac0bd": {
+    "query": "\n                            INSERT INTO sources\n                                (photo_id, width, height, url)\n                            VALUES\n                                ($1, $2, $3, $4)\n                        ",
     "describe": {
       "columns": [],
       "parameters": {

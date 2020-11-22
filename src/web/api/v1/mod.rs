@@ -59,13 +59,19 @@ async fn create_photo(mut req: Request<crate::State>) -> tide::Result<Response> 
     let payload: PhotoPayload = req.body_json().await?;
     tide::log::debug!("Received photo payload: {:#?}", payload);
 
+    let sources = match payload.sources {
+        Some(sources) => sources,
+        None => {
+            return Ok(Response::builder(tide::http::StatusCode::BadRequest).build());
+        },
+    };
 
     let new_photo = crate::models::photos::Photo {
         file_stem: payload.file_stem.clone(),
         title: payload.title,
         taken_timestamp: payload.taken_timestamp,
         tags: payload.tags,
-        sources: payload.sources,
+        sources: sources,
         published: false,
         ..Default::default()
     };

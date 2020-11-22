@@ -49,6 +49,10 @@ pub struct UploadArgs {
     #[structopt(long, env = "RUSTY_PEANUTS_STATIC_HOST")]
     static_host: String,
 
+    /// Only update metadata.
+    #[structopt(long, env = "RUSTY_PEANUTS_ONLY_UPDATE_MATADATA")]
+    only_update_metadata: bool,
+
     /// Path to photo file to upload.
     #[structopt(name = "PATH", parse(from_os_str))]
     file_path: std::path::PathBuf,
@@ -132,9 +136,7 @@ fn encode_jpeg(image: &image::DynamicImage) -> (Vec<u8>, u32, u32) {
     (data, width, height)
 }
 
-fn transcode_photo(
-    image: image::DynamicImage,
-) -> Vec<JoinHandle<(Vec<u8>, u32, u32)>> {
+fn transcode_photo(image: image::DynamicImage) -> Vec<JoinHandle<(Vec<u8>, u32, u32)>> {
     // Filter out the target sizes to only contain those less than or equal to the largest of the
     // photo's dimensions.
     let (width, height) = (image.width(), image.height());
@@ -276,15 +278,20 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         },
     }
 
-    let sources: Vec<Source> = async_std::stream::from_iter(transcode_photo(image).into_iter())
-        .then(|handle: JoinHandle<_>| handle)
-        .then(|(data, width, height)|
-            upload_transcoded_photo(&args, &bucket, &file_stem, data, width, height)
-        )
-        .collect()
-        .await;
-
-    log::info!("All images uploaded");
+    let sources = if args.only_update_metadata {
+        log::info!("Not uploading photos");
+        None
+    } else {
+        let sources = async_std::stream::from_iter(transcode_photo(image).into_iter())
+            .then(|handle: JoinHandle<_>| handle)
+            .then(|(data, width, height)| {
+                upload_transcoded_photo(&args, &bucket, &file_stem, data, width, height)
+            })
+            .collect()
+            .await;
+        log::info!("All images uploaded");
+        Some(sources)
+    };
 
     let payload = PhotoPayload {
         file_stem: file_stem.to_string(),
