@@ -81,7 +81,9 @@ pub async fn main() -> Result<(), Error> {
 
     tide::log::with_level(args.log_level);
 
-    let pool = db::get_pool(&args.database_url).await.unwrap();
+    let pool = db::get_pool(&args.database_url)
+        .await
+        .expect("couldn't get DB pool");
 
     let template_path = args
         .template_path
