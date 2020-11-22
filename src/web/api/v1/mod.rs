@@ -22,7 +22,7 @@ pub(super) fn mount(mut route: tide::Route<crate::State>) {
 
 async fn get_photo(req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
-    let mut conn = state.db.acquire().await.unwrap();
+    let mut conn = state.db.acquire().await.expect("couldn't get DB connection");
 
     let published = match validate_secret_key(&req, &mut conn).await? {
         None => Published::OnlyPublished,
@@ -48,7 +48,7 @@ async fn get_photo(req: Request<crate::State>) -> tide::Result<Response> {
 
 async fn create_photo(mut req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
-    let mut conn = state.db.acquire().await.unwrap();
+    let mut conn = state.db.acquire().await.expect("couldn't get DB connection");
 
     require_valid_secret_key!(req, conn);
 
@@ -93,7 +93,7 @@ async fn create_photo(mut req: Request<crate::State>) -> tide::Result<Response> 
 
 async fn get_photo_by_file_stem(req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
-    let mut conn = state.db.acquire().await.unwrap();
+    let mut conn = state.db.acquire().await.expect("couldn't get DB connection");
 
     let published = match validate_secret_key(&req, &mut conn).await? {
         None => Published::OnlyPublished,
@@ -119,7 +119,7 @@ async fn get_photo_by_file_stem(req: Request<crate::State>) -> tide::Result<Resp
 
 async fn update_photo(mut req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
-    let mut conn = state.db.acquire().await.unwrap();
+    let mut conn = state.db.acquire().await.expect("couldn't get DB connection");
 
     require_valid_secret_key!(req, conn);
 
@@ -149,7 +149,7 @@ async fn update_photo(mut req: Request<crate::State>) -> tide::Result<Response> 
 
 async fn update_photo_published(mut req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
-    let mut conn = state.db.acquire().await.unwrap();
+    let mut conn = state.db.acquire().await.expect("couldn't get DB connection");
 
     require_valid_secret_key!(req, conn);
 
@@ -173,7 +173,7 @@ async fn update_photo_published(mut req: Request<crate::State>) -> tide::Result<
 
 async fn update_photo_height_offset(mut req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
-    let mut conn = state.db.acquire().await.unwrap();
+    let mut conn = state.db.acquire().await.expect("couldn't get DB connection");
 
     require_valid_secret_key!(req, conn);
 
