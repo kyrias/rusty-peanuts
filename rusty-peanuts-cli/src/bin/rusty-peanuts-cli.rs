@@ -146,7 +146,7 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         .expect("couldn't get region name from region endpoint")
         .to_string();
 
-    let mut bucket = Bucket::new(
+    let mut bucket = Bucket::new_with_path_style(
         &args.s3_bucket,
         s3::Region::Custom {
             region: s3_region_name,
