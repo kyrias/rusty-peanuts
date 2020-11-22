@@ -36,7 +36,7 @@ async fn get_photo(req: Request<crate::State>) -> tide::Result<Response> {
     };
 
     let photo_id: i32 = req.param("photo_id")?.parse()?;
-    let res = match conn.get_photo_by_id(photo_id, published).await {
+    let res = match conn.get_photo_by_id(photo_id, published).await? {
         Some(photo) => Response::builder(tide::http::StatusCode::Ok)
             .body(tide::Body::from_json(&photo)?)
             .build(),
