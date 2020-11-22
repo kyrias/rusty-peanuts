@@ -71,7 +71,7 @@ async fn create_photo(mut req: Request<crate::State>) -> tide::Result<Response> 
         title: payload.title,
         taken_timestamp: payload.taken_timestamp,
         tags: payload.tags,
-        sources: sources,
+        sources,
         published: false,
         ..Default::default()
     };
