@@ -101,7 +101,7 @@ fn decode_image(file: &std::fs::File) -> (image::DynamicImage, image::ImageForma
 }
 
 fn encode_jpeg(image: &image::DynamicImage) -> (Vec<u8>, u32, u32) {
-    let rgb_image = image.to_rgb();
+    let rgb_image = image.to_rgb8();
     let (width, height) = (rgb_image.width(), rgb_image.height());
     let rgb_data = rgb_image.into_vec();
     log::debug!("Turned image into raw RGB data");
