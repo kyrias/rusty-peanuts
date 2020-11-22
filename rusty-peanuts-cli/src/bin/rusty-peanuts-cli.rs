@@ -276,8 +276,8 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         .expect("couldn't send POST request to rusty-peanuts API");
     let body: serde_json::Value = res.body_json().await
         .unwrap();
-    log::debug!("Rusty-peanuts API response: {:#?}", res);
-    log::debug!("Rusty-peanuts API body: {:#?}", body);
+    log::info!("Rusty-peanuts API response: {:#?}", res);
+    log::info!("Rusty-peanuts API body: {:#?}", body);
 
     let status = res.status();
     assert!(!status.is_client_error() && !status.is_server_error());
@@ -298,7 +298,7 @@ async fn set_published(args: SetPublishedArgs) -> std::io::Result<()> {
         .body(surf::Body::from_json(&args.published).expect("couldn't serialize body"))
         .await
         .expect("couldn't send POST request to rusty-peanuts API");
-    log::debug!("Rusty-peanuts API response: {:#?}", res);
+    log::info!("Rusty-peanuts API response: {:#?}", res);
 
     Ok(())
 }
@@ -316,7 +316,7 @@ async fn set_height_offset(args: SetHeightOffsetArgs) -> std::io::Result<()> {
         .body(surf::Body::from_json(&args.height_offset).expect("couldn't serialize body"))
         .await
         .expect("couldn't send POST request to rusty-peanuts API");
-    log::debug!("Rusty-peanuts API response: {:#?}", res);
+    log::info!("Rusty-peanuts API response: {:#?}", res);
 
     Ok(())
 }
