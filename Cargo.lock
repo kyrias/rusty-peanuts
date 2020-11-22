@@ -2504,6 +2504,7 @@ dependencies = [
  "async-std",
  "dotenv",
  "env_logger",
+ "futures-lite",
  "image",
  "log",
  "mozjpeg",

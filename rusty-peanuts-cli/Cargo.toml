@@ -6,6 +6,7 @@ edition = "2018"
 default-run = "rusty-peanuts-cli"
 
 [dependencies]
+futures-lite = "1.11.2"
 image = "0.23.12"
 mozjpeg = "0.8.21"
 tiff = "0.6.0"

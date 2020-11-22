@@ -1,5 +1,7 @@
 use std::io::Seek;
 
+use async_std::task::JoinHandle;
+use futures_lite::stream::StreamExt;
 use image::GenericImageView;
 use s3::bucket::Bucket;
 use s3::creds::Credentials;
@@ -130,6 +132,76 @@ fn encode_jpeg(image: &image::DynamicImage) -> (Vec<u8>, u32, u32) {
     (data, width, height)
 }
 
+fn transcode_photo(
+    image: image::DynamicImage,
+) -> Vec<JoinHandle<(Vec<u8>, u32, u32)>> {
+    // Filter out the target sizes to only contain those less than or equal to the largest of the
+    // photo's dimensions.
+    let (width, height) = (image.width(), image.height());
+    let sizes = [
+        1800, 1700, 1600, 1500, 1400, 1300, 1200, 1100, 1000, 900, 800, 700, 600, 500, 400, 300,
+    ]
+    .iter()
+    .filter(move |&&s| s <= std::cmp::max(width, height));
+
+    let mut handles = Vec::new();
+    for size in sizes {
+        let image = image.clone();
+
+        let handle = async_std::task::spawn_blocking(move || {
+            let start = std::time::Instant::now();
+            log::info!("Started resizing image to {}px", size);
+            let resized = image.resize(*size, *size, image::imageops::FilterType::Lanczos3);
+            log::info!(
+                "Finished resizing image to {}px in {}s",
+                size,
+                start.elapsed().as_secs_f32()
+            );
+
+            let (jpeg_data, width, height) = encode_jpeg(&resized);
+            log::info!(
+                "Finished image of size {}px in {}s",
+                size,
+                start.elapsed().as_secs_f32()
+            );
+
+            (jpeg_data, width, height)
+        });
+        handles.push(handle);
+    }
+
+    handles
+}
+
+async fn upload_transcoded_photo(
+    args: &UploadArgs,
+    bucket: &Bucket,
+    file_stem: &str,
+    data: Vec<u8>,
+    width: u32,
+    height: u32,
+) -> Source {
+    log::info!("Uploading resized image of size {}x{}", width, height);
+
+    let target_path = format!("{}/{}.{}x{}.jpeg", file_stem, file_stem, width, height);
+    let (_, code) = bucket
+        .put_object_with_content_type(&target_path, &data, "image/jpeg")
+        .await
+        .expect("could not upload file");
+    assert!(code >= 200 && code < 300);
+    log::info!(
+        "Uploading resized image of size {}x{} finished",
+        width,
+        height
+    );
+
+    Source {
+        width: width,
+        height: height,
+        url: format!("{}/{}", args.static_host, target_path),
+    }
+}
+
 async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
     let auth_header = format!("Bearer {}", args.api_arguments.secret_key);
     let file_stem = args
@@ -174,7 +246,7 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         &args.s3_bucket,
         s3::Region::Custom {
             region: s3_region_name,
-            endpoint: args.s3_region_endpoint,
+            endpoint: args.s3_region_endpoint.clone(),
         },
         credentials,
     )
@@ -204,66 +276,13 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         },
     }
 
-    let image = std::sync::Arc::new(image);
-
-    let mut task_handles = Vec::new();
-
-    // Filter out the target sizes to only contain those less than or equal to the largest of the
-    // photo's dimensions.
-    let (width, height) = (image.width(), image.height());
-    let sizes = [
-        1800, 1700, 1600, 1500, 1400, 1300, 1200, 1100, 1000, 900, 800, 700, 600, 500, 400, 300,
-    ]
-    .iter()
-    .filter(|&&s| s <= std::cmp::max(width, height));
-
-    for size in sizes {
-        let image = image.clone();
-
-        task_handles.push(async_std::task::spawn_blocking(move || {
-            let start = std::time::Instant::now();
-            log::info!("Started resizing image to {}px", size);
-            let resized = image.resize(*size, *size, image::imageops::FilterType::Lanczos3);
-            log::info!(
-                "Finished resizing image to {}px in {}s",
-                size,
-                start.elapsed().as_secs_f32()
-            );
-
-            let (jpeg_data, width, height) = encode_jpeg(&resized);
-            log::info!(
-                "Finished image of size {}px in {}s",
-                size,
-                start.elapsed().as_secs_f32()
-            );
-
-            (jpeg_data, width, height)
-        }));
-    }
-
-    let mut sources = Vec::new();
-    for handle in task_handles {
-        let (jpeg_data, width, height) = handle.await;
-        log::info!("Uploading resized image of size {}x{}", width, height);
-
-        let target_path = format!("{}/{}.{}x{}.jpeg", file_stem, file_stem, width, height,);
-        let (_, code) = bucket
-            .put_object_with_content_type(&target_path, &jpeg_data, "image/jpeg")
-            .await
-            .expect("could not upload file");
-        assert!(code >= 200 && code < 300);
-
-        sources.push(Source {
-            width: width,
-            height: height,
-            url: format!("{}/{}", args.static_host, target_path),
-        });
-        log::info!(
-            "Uploading resized image of size {}x{} finished",
-            width,
-            height
-        );
-    }
+    let sources: Vec<Source> = async_std::stream::from_iter(transcode_photo(image).into_iter())
+        .then(|handle: JoinHandle<_>| handle)
+        .then(|(data, width, height)|
+            upload_transcoded_photo(&args, &bucket, &file_stem, data, width, height)
+        )
+        .collect()
+        .await;
 
     log::info!("All images uploaded");
 
