@@ -170,7 +170,9 @@ async fn photo_multiple_times(req: Request<crate::State>) -> tide::Result<Respon
     context.insert("title", &format!("photo #{}", photo_id));
     context.insert("photo", &photo);
 
-    let body = state.tera.render("single-photo-multiple-times.html", &context)?;
+    let body = state
+        .tera
+        .render("single-photo-multiple-times.html", &context)?;
     let res = Response::builder(tide::http::StatusCode::Ok)
         .content_type("text/html")
         .body(body)

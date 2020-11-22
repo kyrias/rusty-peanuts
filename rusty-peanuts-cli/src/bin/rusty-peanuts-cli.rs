@@ -289,8 +289,7 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         .body(surf::Body::from_json(&payload).expect("couldn't serialize body"))
         .await
         .expect("couldn't send POST request to rusty-peanuts API");
-    let body: serde_json::Value = res.body_json().await
-        .unwrap();
+    let body: serde_json::Value = res.body_json().await.unwrap();
     log::info!("Rusty-peanuts API response: {:#?}", res);
     log::info!("Rusty-peanuts API body: {:#?}", body);
 
