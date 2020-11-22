@@ -15,7 +15,9 @@ pub(super) fn mount(mut route: tide::Route<crate::State>) {
         .at("/photo/by-id/:photo_id/height-offset")
         .post(update_photo_height_offset);
 
-    route.at("/photo/by-filestem/:file_stem").post(update_photo);
+    route.at("/photo/by-filestem/:file_stem")
+        .get(get_photo_by_file_stem)
+        .post(update_photo);
 }
 
 async fn get_photo(req: Request<crate::State>) -> tide::Result<Response> {
@@ -80,6 +82,33 @@ async fn create_photo(mut req: Request<crate::State>) -> tide::Result<Response> 
                 .build())
         },
     }
+}
+
+
+async fn get_photo_by_file_stem(req: Request<crate::State>) -> tide::Result<Response> {
+    let state = req.state();
+    let mut conn = state.db.acquire().await.unwrap();
+
+    let published = match validate_secret_key(&req, &mut conn).await? {
+        None => Published::OnlyPublished,
+        Some(false) => Published::OnlyPublished,
+        Some(true) => Published::All,
+    };
+
+    let file_stem = req.param("file_stem")?;
+    let res = match conn.get_photo_by_file_stem(file_stem, published).await? {
+        Some(photo) => {
+            Response::builder(tide::http::StatusCode::Ok)
+                .body(tide::Body::from_json(&photo)?)
+                .build()
+        },
+        None => {
+            Response::builder(tide::http::StatusCode::NotFound)
+                .build()
+        }
+    };
+
+    Ok(res)
 }
 
 async fn update_photo(mut req: Request<crate::State>) -> tide::Result<Response> {
