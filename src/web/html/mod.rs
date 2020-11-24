@@ -130,14 +130,23 @@ async fn photo_internal(req: Request<crate::State>, template: &str) -> tide::Res
     let photo_id = req.param("photo_id")?.parse::<i32>()?;
 
     let published = allowed_publish_status(&req, &mut conn).await?;
-    let photo = conn.get_photo_by_id(photo_id, published).await?;
+    let res = conn.get_photo_by_id(photo_id, published).await?;
 
-    let photo = match photo {
-        Some(photo) => photo,
+    let mut context = tera::Context::new();
+
+    let photo = match res {
+        Some((photo, newer, older)) => {
+            if let Some(newer_id) = newer {
+                context.insert("newer_id", &newer_id);
+            }
+            if let Some(older_id) = older {
+                context.insert("older_id", &older_id);
+            }
+            photo
+        },
         None => return Ok(Response::builder(tide::http::StatusCode::NotFound).build()),
     };
 
-    let mut context = tera::Context::new();
     match photo.title {
         Some(ref title) => context.insert("title", &title),
         None => context.insert("title", "Untitled"),

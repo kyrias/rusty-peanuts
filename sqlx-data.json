@@ -50,21 +50,6 @@
       "nullable": []
     }
   },
-  "40f65093221ba445e529a850857fe066407c950044fb14c4f89384a51dc55833": {
-    "query": "\n                        INSERT INTO sources\n                            (photo_id, width, height, url)\n                        VALUES\n                            ($1, $2, $3, $4)\n                    ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Int4",
-          "Int4",
-          "Int4",
-          "Varchar"
-        ]
-      },
-      "nullable": []
-    }
-  },
   "550a77524200327d47bb5e117d3b797c4e33c7fbb905cfbde3959eae211ac0bd": {
     "query": "\n                            INSERT INTO sources\n                                (photo_id, width, height, url)\n                            VALUES\n                                ($1, $2, $3, $4)\n                        ",
     "describe": {
@@ -114,18 +99,6 @@
         "Left": [
           "Int4",
           "VarcharArray"
-        ]
-      },
-      "nullable": []
-    }
-  },
-  "ba1dd7b37aea99609cac4ad1a8e004e47d75bac910d95b1bca1a0d82d1721e60": {
-    "query": "\n                    DELETE FROM\n                        sources\n                    WHERE\n                        photo_id = $1\n                ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Int4"
         ]
       },
       "nullable": []

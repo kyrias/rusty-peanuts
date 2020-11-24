@@ -80,7 +80,7 @@ pub trait PhotoProvider {
         &mut self,
         photo_id: PhotoId,
         published: Published,
-    ) -> Result<Option<models::photos::Photo>, sqlx::Error>;
+    ) -> Result<Option<(models::photos::Photo, Option<PhotoId>, Option<PhotoId>)>, sqlx::Error>;
 
     async fn get_photo_by_file_stem(
         &mut self,
@@ -273,7 +273,7 @@ impl PhotoProvider for PgConnection {
         &mut self,
         photo_id: PhotoId,
         published: Published,
-    ) -> Result<Option<models::photos::Photo>, sqlx::Error> {
+    ) -> Result<Option<(models::photos::Photo, Option<PhotoId>, Option<PhotoId>)>, sqlx::Error> {
         let mut query = r#"
             SELECT
                 id, title, file_stem, taken_timestamp, height_offset, tags, published,
@@ -301,13 +301,70 @@ impl PhotoProvider for PgConnection {
         "#,
         );
 
-        let res: Result<Photo, _> = sqlx::query_as(&query).bind(photo_id).fetch_one(self).await;
+        let res: Result<Option<Photo>, _> = sqlx::query_as(&query).bind(photo_id).fetch_optional(&mut *self).await;
+        let photo = match res {
+            Ok(Some(photo)) => photo,
+            Ok(None) => return Ok(None),
+            Err(err) => return Err(err),
+        };
 
-        match res {
-            Ok(photo) => Ok(Some(photo.into())),
-            Err(sqlx::Error::RowNotFound) => Ok(None),
-            Err(err) => Err(err),
-        }
+        let newer_id = {
+            let mut query = r#"
+                SELECT
+                    id
+                FROM
+                    photos photo
+                WHERE
+                    id > $1
+            "#
+            .to_string();
+
+            if published == Published::OnlyPublished {
+                query.push_str("    AND photo.published = 't'\n")
+            }
+
+            query.push_str(
+                r#"
+                ORDER BY id ASC
+                LIMIT 1
+            "#,
+            );
+
+            match sqlx::query_as(&query).bind(photo_id).fetch_one(&mut *self).await {
+                Ok((option_photo_id,)) => Some(option_photo_id),
+                Err(_) => None,
+            }
+        };
+
+        let older_id = {
+            let mut query = r#"
+                SELECT
+                    id
+                FROM
+                    photos photo
+                WHERE
+                    id < $1
+            "#
+            .to_string();
+
+            if published == Published::OnlyPublished {
+                query.push_str("    AND photo.published = 't'\n")
+            }
+
+            query.push_str(
+                r#"
+                ORDER BY id DESC
+                LIMIT 1
+            "#,
+            );
+
+            match sqlx::query_as(&query).bind(photo_id).fetch_one(&mut *self).await {
+                Ok((option_photo_id,)) => Some(option_photo_id),
+                Err(_) => None,
+            }
+        };
+
+        Ok(Some((photo.into(), newer_id, older_id)))
     }
 
 
