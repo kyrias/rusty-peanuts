@@ -10,8 +10,8 @@ pub(in super::super) fn mount(route: &mut tide::Server<crate::State>) {
 
     route.at("/tagged/:tagged").get(gallery);
 
-    route.at("/photo/:photo_id").get(photo);
-    route.at("/photo/:photo_id/multi").get(photo_multiple_times);
+    route.at("/photo/:photo_id").get(single_photo);
+    route.at("/photo/:photo_id/multi").get(single_photo_multiple_times);
 }
 
 async fn allowed_publish_status(
@@ -123,7 +123,7 @@ async fn gallery(req: Request<crate::State>) -> tide::Result<Response> {
     Ok(res)
 }
 
-async fn photo(req: Request<crate::State>) -> tide::Result<Response> {
+async fn photo_internal(req: Request<crate::State>, template: &str) -> tide::Result<Response> {
     let state = req.state();
     let mut conn = state.db.acquire().await?;
 
@@ -144,7 +144,7 @@ async fn photo(req: Request<crate::State>) -> tide::Result<Response> {
     }
     context.insert("photo", &photo);
 
-    let body = state.tera.render("photo.html", &context)?;
+    let body = state.tera.render(template, &context)?;
     let res = Response::builder(tide::http::StatusCode::Ok)
         .content_type("text/html")
         .body(body)
@@ -152,30 +152,10 @@ async fn photo(req: Request<crate::State>) -> tide::Result<Response> {
     Ok(res)
 }
 
-async fn photo_multiple_times(req: Request<crate::State>) -> tide::Result<Response> {
-    let state = req.state();
-    let mut conn = state.db.acquire().await?;
+async fn single_photo(req: Request<crate::State>) -> tide::Result<Response> {
+    photo_internal(req, "photo.html").await
+}
 
-    let photo_id = req.param("photo_id")?.parse::<i32>()?;
-
-    let published = allowed_publish_status(&req, &mut conn).await?;
-    let photo = conn.get_photo_by_id(photo_id, published).await?;
-
-    let photo = match photo {
-        Some(photo) => photo,
-        None => return Ok(Response::builder(tide::http::StatusCode::NotFound).build()),
-    };
-
-    let mut context = tera::Context::new();
-    context.insert("title", &format!("photo #{}", photo_id));
-    context.insert("photo", &photo);
-
-    let body = state
-        .tera
-        .render("single-photo-multiple-times.html", &context)?;
-    let res = Response::builder(tide::http::StatusCode::Ok)
-        .content_type("text/html")
-        .body(body)
-        .build();
-    Ok(res)
+async fn single_photo_multiple_times(req: Request<crate::State>) -> tide::Result<Response> {
+    photo_internal(req, "single-photo-multiple-times.html").await
 }
