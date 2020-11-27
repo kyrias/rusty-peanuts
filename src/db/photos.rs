@@ -67,7 +67,7 @@ pub trait PhotoProvider {
     /// * `page`: Which photo to start the page on.
     /// * `tagged`: If `Some`, only get photos with these tags.
     /// * `published`: Whether to get all photos, or only published ones.
-    async fn get_paginated_photos(
+    async fn get_photo_page(
         &mut self,
         limit: i64,
         page: Page,
@@ -149,7 +149,7 @@ pub trait PhotoProvider {
 
 #[async_trait::async_trait]
 impl PhotoProvider for PgConnection {
-    async fn get_paginated_photos(
+    async fn get_photo_page(
         &mut self,
         limit: i64,
         page: Page,
@@ -269,7 +269,7 @@ impl PhotoProvider for PgConnection {
         let previous = match photos.first() {
             Some(photo) => {
                 if self
-                    .get_paginated_photos(1, Page::After(photo.id as u32), &tagged, published)
+                    .get_photo_page(1, Page::After(photo.id as u32), &tagged, published)
                     .await?
                     .is_empty()
                 {
@@ -284,7 +284,7 @@ impl PhotoProvider for PgConnection {
         let next = match photos.last() {
             Some(photo) => {
                 if self
-                    .get_paginated_photos(1, Page::Before(photo.id as u32), &tagged, published)
+                    .get_photo_page(1, Page::Before(photo.id as u32), &tagged, published)
                     .await?
                     .is_empty()
                 {

@@ -67,7 +67,7 @@ async fn gallery(req: Request<crate::State>) -> tide::Result<Response> {
     };
 
     let photos = conn
-        .get_paginated_photos(limit.into(), query.offset.into(), &tagged, published)
+        .get_photo_page(limit.into(), query.offset.into(), &tagged, published)
         .await?;
 
     let (newer, older) = conn
