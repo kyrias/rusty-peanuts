@@ -23,6 +23,7 @@ percent-encoding = "2.1.0"
 structopt = "0.3.20"
 
 rusty-peanuts-api-structs = { path = "rusty-peanuts-api-structs" }
+sitemap = "0.4.1"
 
 [workspace]
 members = ["rusty-peanuts-api-structs", "rusty-peanuts-cli"]

@@ -53,6 +53,10 @@ pub struct Args {
     #[structopt(long, env = "DATABASE_URL", hide_env_values = true)]
     database_url: String,
 
+    /// Gallery base URL.
+    #[structopt(long, env = "RUSTY_PEANUTS_BASE_URL")]
+    base_url: String,
+
     /// Default number of photos per gallery page
     #[structopt(
         long,

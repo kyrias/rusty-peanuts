@@ -7,6 +7,7 @@ use crate::db::secret_keys::SecretKeyProvider;
 
 pub(in super::super) fn mount(route: &mut tide::Server<crate::State>) {
     route.at("/").get(gallery);
+    route.at("/sitemap.xml").get(sitemap);
 
     route.at("/tagged/:tagged").get(gallery);
 
@@ -122,6 +123,36 @@ async fn gallery(req: Request<crate::State>) -> tide::Result<Response> {
         .build();
     Ok(res)
 }
+
+async fn sitemap(req: Request<crate::State>) -> tide::Result<Response> {
+    let state = req.state();
+    let mut conn = state.db.acquire().await?;
+
+    let published = allowed_publish_status(&req, &mut conn).await?;
+
+    let mut buf = Vec::new();
+    let sitemap_writer = sitemap::writer::SiteMapWriter::new(&mut buf);
+    let mut urlwriter = sitemap_writer.start_urlset()?;
+
+    urlwriter.url(format!("{}/", state.args.base_url))?;
+
+    for (tag, _) in conn.get_photo_tags_with_counts(&None, published).await? {
+        urlwriter.url(format!("{}/tagged/{}", state.args.base_url, tag))?;
+    }
+
+    for id in conn.get_all_photo_ids(published).await? {
+        urlwriter.url(format!("{}/photo/{}", state.args.base_url, id))?;
+    }
+
+    urlwriter.end()?;
+
+    let res = Response::builder(tide::http::StatusCode::Ok)
+        .body(buf)
+        .content_type(tide::http::mime::XML)
+        .build();
+    Ok(res)
+}
+
 
 async fn photo_internal(req: Request<crate::State>, template: &str) -> tide::Result<Response> {
     let state = req.state();

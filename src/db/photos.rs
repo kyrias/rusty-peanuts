@@ -94,6 +94,11 @@ pub trait PhotoProvider {
         published: Published,
     ) -> Result<Vec<(String, i64)>, sqlx::Error>;
 
+    async fn get_all_photo_ids(
+        &mut self,
+        published: Published,
+    ) -> Result<Vec<i32>, sqlx::Error>;
+
     async fn insert_photo(&mut self, photo: &models::photos::Photo)
         -> Result<PhotoId, sqlx::Error>;
 
@@ -468,6 +473,38 @@ impl PhotoProvider for PgConnection {
         let tags_with_counts: Vec<(String, i64)> = query.fetch_all(self).await?;
 
         Ok(tags_with_counts)
+    }
+
+
+    async fn get_all_photo_ids(
+        &mut self,
+        published: Published,
+    ) -> Result<Vec<i32>, sqlx::Error> {
+        let mut query = r#"
+            SELECT
+                id
+            FROM
+                photos photo
+        "#
+        .to_string();
+
+        if published == Published::OnlyPublished {
+            query.push_str(r#"
+                WHERE
+                    photo.published = 't'
+            "#);
+        }
+
+        query.push_str(
+            r#"
+            ORDER BY
+                id ASC
+        "#,
+        );
+
+        let ids: Vec<(i32,)> = sqlx::query_as(&query).fetch_all(self).await?;
+
+        Ok(ids.into_iter().map(|(id,)| id).collect())
     }
 
 
