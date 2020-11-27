@@ -61,6 +61,12 @@ pub struct Photo {
 
 #[async_trait::async_trait]
 pub trait PhotoProvider {
+    /// Get a page of photos.
+    ///
+    /// * `limit`: The number of photos to get.
+    /// * `page`: Which photo to start the page on.
+    /// * `tagged`: If `Some`, only get photos with these tags.
+    /// * `published`: Whether to get all photos, or only published ones.
     async fn get_paginated_photos(
         &mut self,
         limit: i64,
@@ -69,6 +75,14 @@ pub trait PhotoProvider {
         published: Published,
     ) -> Result<Vec<models::photos::Photo>, sqlx::Error>;
 
+    /// Get the pagination IDs for a list of photos.
+    ///
+    /// Returns the IDs of the photo that comes after the ID of the first photo, and before the ID
+    /// of the last photo, in the list of photos.
+    ///
+    /// * `photos`: A list of photos to get the pagination IDs for.
+    /// * `tagged`: If `Some`, only take inte account photos with these tags.
+    /// * `published`: Whether to take into account all photos, or only published ones.
     async fn get_photo_pagination_ids(
         &mut self,
         photos: &[models::photos::Photo],
@@ -76,44 +90,56 @@ pub trait PhotoProvider {
         published: Published,
     ) -> Result<(Option<i32>, Option<i32>), sqlx::Error>;
 
+    /// Get a single photo by ID.
     async fn get_photo_by_id(
         &mut self,
         photo_id: PhotoId,
         published: Published,
     ) -> Result<Option<(models::photos::Photo, Option<PhotoId>, Option<PhotoId>)>, sqlx::Error>;
 
+    /// Get a single photo by its file stem.
     async fn get_photo_by_file_stem(
         &mut self,
         file_stem: &str,
         published: Published,
     ) -> Result<Option<models::photos::Photo>, sqlx::Error>;
 
+    /// Get all tags and how many photos have that tag.
+    ///
+    /// If `tagged` is not `None`, only tags in the list will be returned.
     async fn get_photo_tags_with_counts(
         &mut self,
         tagged: &Option<Vec<String>>,
         published: Published,
     ) -> Result<Vec<(String, i64)>, sqlx::Error>;
 
+    /// Get the IDs for all photos.
+    ///
+    /// * `published`: Whether to take into account all photos, or only published ones.
     async fn get_all_photo_ids(
         &mut self,
         published: Published,
     ) -> Result<Vec<i32>, sqlx::Error>;
 
+    /// Insert a new photo.
     async fn insert_photo(&mut self, photo: &models::photos::Photo)
         -> Result<PhotoId, sqlx::Error>;
 
+    /// Update an existing photo.
     async fn update_photo(
         &mut self,
         old_photo: &models::photos::Photo,
         new_photo: &rusty_peanuts_api_structs::PhotoPayload,
     ) -> Result<bool, sqlx::Error>;
 
+    /// Set the published state of a photo by ID.
     async fn set_photo_published_state(
         &mut self,
         photo_id: PhotoId,
         published: bool,
     ) -> Result<(), sqlx::Error>;
 
+    /// Set the height offset of a photo by ID.
     async fn set_photo_height_offset(
         &mut self,
         photo_id: PhotoId,
