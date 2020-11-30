@@ -108,12 +108,20 @@ async fn gallery(req: Request<crate::State>) -> tide::Result<Response> {
     match tagged {
         Some(tag) => {
             context.insert("title", &format!("tagged {}", tag[0]));
-            let canonical_href = format!("{}/tagged/{}", state.args.base_url, tag[0]);
+            let canonical_href = if let Some(offset) = query.offset {
+                format!("{}/tagged/{}?offset={}", state.args.base_url, tag[0], offset)
+            } else {
+                format!("{}/tagged/{}", state.args.base_url, tag[0])
+            };
             context.insert("canonical_href", &canonical_href);
         },
         None => {
             context.insert("title", "gallery");
-            let canonical_href = format!("{}/", state.args.base_url);
+            let canonical_href = if let Some(offset) = query.offset {
+                format!("{}/?offset={}", state.args.base_url, offset)
+            } else {
+                format!("{}/", state.args.base_url)
+            };
             context.insert("canonical_href", &canonical_href);
         },
     }
