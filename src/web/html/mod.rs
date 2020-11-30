@@ -105,6 +105,7 @@ async fn gallery(req: Request<crate::State>) -> tide::Result<Response> {
     .expect("could not encode newest pagination query string");
 
     let mut context = tera::Context::new();
+    context.insert("cache_buster", &state.cache_busting_string);
     match tagged {
         Some(tag) => {
             context.insert("title", &format!("tagged {}", tag[0]));
@@ -192,6 +193,7 @@ async fn photo_internal(req: Request<crate::State>, mut context: tera::Context, 
         None => return Ok(Response::builder(tide::http::StatusCode::NotFound).build()),
     };
 
+    context.insert("cache_buster", &state.cache_busting_string);
     match photo.title {
         Some(ref title) => context.insert("title", &title),
         None => context.insert("title", "Untitled"),

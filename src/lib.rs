@@ -1,3 +1,4 @@
+use std::io::Read;
 use std::sync::Arc;
 
 use structopt::StructOpt;
@@ -11,6 +12,7 @@ pub struct State {
     pub args: Arc<Args>,
     pub db: sqlx::postgres::PgPool,
     pub tera: Arc<tera::Tera>,
+    pub cache_busting_string: Option<String>,
 }
 
 #[derive(Debug)]
@@ -92,19 +94,29 @@ pub async fn main() -> Result<(), Error> {
     let template_path = args
         .template_path
         .canonicalize()
-        .expect("could not canonicalize template path")
-        .join("**/*.html");
-    let tera = match tera::Tera::new(&template_path.to_string_lossy()) {
+        .expect("could not canonicalize template path");
+    let tera = match tera::Tera::new(&template_path.join("**/*.html").to_string_lossy()) {
         Ok(t) => t,
         Err(e) => {
             return Err(Error::TemplateParseError(e));
         },
     };
 
+    let cache_busting_string = match std::fs::File::open(template_path.join("cache-buster")) {
+        Ok(mut file) => {
+            let mut data = String::new();
+            file.read_to_string(&mut data)
+                .expect("couldn't read cache busting string from file");
+            data.split_whitespace().next().map(|s| s.to_string())
+        },
+        Err(_) => None,
+    };
+
     let state = State {
         args: args.clone(),
         db: pool,
         tera: Arc::new(tera),
+        cache_busting_string,
     };
     let mut app = tide::with_state(state);
 
