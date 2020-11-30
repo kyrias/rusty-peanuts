@@ -12,7 +12,9 @@ pub(in super::super) fn mount(route: &mut tide::Server<crate::State>) {
     route.at("/tagged/:tagged").get(gallery);
 
     route.at("/photo/:photo_id").get(single_photo);
-    route.at("/photo/:photo_id/multi").get(single_photo_multiple_times);
+    route
+        .at("/photo/:photo_id/multi")
+        .get(single_photo_multiple_times);
 }
 
 async fn allowed_publish_status(
@@ -110,7 +112,10 @@ async fn gallery(req: Request<crate::State>) -> tide::Result<Response> {
         Some(tag) => {
             context.insert("title", &format!("tagged {}", tag[0]));
             let canonical_href = if let Some(offset) = query.offset {
-                format!("{}/tagged/{}?offset={}", state.args.base_url, tag[0], offset)
+                format!(
+                    "{}/tagged/{}?offset={}",
+                    state.args.base_url, tag[0], offset
+                )
             } else {
                 format!("{}/tagged/{}", state.args.base_url, tag[0])
             };
@@ -170,8 +175,11 @@ async fn sitemap(req: Request<crate::State>) -> tide::Result<Response> {
     Ok(res)
 }
 
-
-async fn photo_internal(req: Request<crate::State>, mut context: tera::Context, template: &str) -> tide::Result<Response> {
+async fn photo_internal(
+    req: Request<crate::State>,
+    mut context: tera::Context,
+    template: &str,
+) -> tide::Result<Response> {
     let state = req.state();
     let mut conn = state.db.acquire().await?;
 
@@ -213,18 +221,23 @@ async fn single_photo(req: Request<crate::State>) -> tide::Result<Response> {
     let mut context = tera::Context::new();
 
     let photo_id = req.param("photo_id")?;
-    context.insert("canonical_href", &format!("{}/photo/{}", state.args.base_url, photo_id));
+    context.insert(
+        "canonical_href",
+        &format!("{}/photo/{}", state.args.base_url, photo_id),
+    );
 
     photo_internal(req, context, "photo.html").await
 }
-
 
 async fn single_photo_multiple_times(req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
     let mut context = tera::Context::new();
 
     let photo_id = req.param("photo_id")?;
-    context.insert("canonical_href", &format!("{}/photo/{}/multi", state.args.base_url, photo_id));
+    context.insert(
+        "canonical_href",
+        &format!("{}/photo/{}/multi", state.args.base_url, photo_id),
+    );
 
     photo_internal(req, context, "single-photo-multiple-times.html").await
 }

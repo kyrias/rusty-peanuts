@@ -116,10 +116,7 @@ pub trait PhotoProvider {
     /// Get the IDs for all photos.
     ///
     /// * `published`: Whether to take into account all photos, or only published ones.
-    async fn get_all_photo_ids(
-        &mut self,
-        published: Published,
-    ) -> Result<Vec<i32>, sqlx::Error>;
+    async fn get_all_photo_ids(&mut self, published: Published) -> Result<Vec<i32>, sqlx::Error>;
 
     /// Insert a new photo.
     async fn insert_photo(&mut self, photo: &models::photos::Photo)
@@ -304,7 +301,8 @@ impl PhotoProvider for PgConnection {
         &mut self,
         photo_id: PhotoId,
         published: Published,
-    ) -> Result<Option<(models::photos::Photo, Option<PhotoId>, Option<PhotoId>)>, sqlx::Error> {
+    ) -> Result<Option<(models::photos::Photo, Option<PhotoId>, Option<PhotoId>)>, sqlx::Error>
+    {
         let mut query = r#"
             SELECT
                 id, title, file_stem, taken_timestamp, height_offset, tags, published,
@@ -332,7 +330,10 @@ impl PhotoProvider for PgConnection {
         "#,
         );
 
-        let res: Result<Option<Photo>, _> = sqlx::query_as(&query).bind(photo_id).fetch_optional(&mut *self).await;
+        let res: Result<Option<Photo>, _> = sqlx::query_as(&query)
+            .bind(photo_id)
+            .fetch_optional(&mut *self)
+            .await;
         let photo = match res {
             Ok(Some(photo)) => photo,
             Ok(None) => return Ok(None),
@@ -361,7 +362,11 @@ impl PhotoProvider for PgConnection {
             "#,
             );
 
-            match sqlx::query_as(&query).bind(photo_id).fetch_one(&mut *self).await {
+            match sqlx::query_as(&query)
+                .bind(photo_id)
+                .fetch_one(&mut *self)
+                .await
+            {
                 Ok((option_photo_id,)) => Some(option_photo_id),
                 Err(_) => None,
             }
@@ -389,7 +394,11 @@ impl PhotoProvider for PgConnection {
             "#,
             );
 
-            match sqlx::query_as(&query).bind(photo_id).fetch_one(&mut *self).await {
+            match sqlx::query_as(&query)
+                .bind(photo_id)
+                .fetch_one(&mut *self)
+                .await
+            {
                 Ok((option_photo_id,)) => Some(option_photo_id),
                 Err(_) => None,
             }
@@ -502,10 +511,7 @@ impl PhotoProvider for PgConnection {
     }
 
 
-    async fn get_all_photo_ids(
-        &mut self,
-        published: Published,
-    ) -> Result<Vec<i32>, sqlx::Error> {
+    async fn get_all_photo_ids(&mut self, published: Published) -> Result<Vec<i32>, sqlx::Error> {
         let mut query = r#"
             SELECT
                 id
@@ -515,10 +521,12 @@ impl PhotoProvider for PgConnection {
         .to_string();
 
         if published == Published::OnlyPublished {
-            query.push_str(r#"
+            query.push_str(
+                r#"
                 WHERE
                     photo.published = 't'
-            "#);
+            "#,
+            );
         }
 
         query.push_str(
