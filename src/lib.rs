@@ -122,7 +122,8 @@ pub async fn main() -> Result<(), Error> {
 
     web::mount(&mut app);
 
-    app.listen((args.address.as_ref(), args.port))
+    let address: &str = args.address.as_ref();
+    app.listen((address, args.port))
         .await
         .expect("starting tide app failed");
 
