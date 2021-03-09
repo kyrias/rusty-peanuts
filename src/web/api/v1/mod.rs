@@ -88,10 +88,9 @@ async fn create_photo(mut req: Request<crate::State>) -> tide::Result<Response> 
             .build()),
         None => {
             let id = conn.insert_photo(&new_photo).await?;
-            let created_photo = match conn.get_photo_by_id(id, Published::All).await? {
-                Some((photo, _, _)) => Some(photo),
-                None => None,
-            };
+            let created_photo = conn.get_photo_by_id(id, Published::All)
+                .await?
+                .map(|(photo, _, _)| photo);
 
             Ok(Response::builder(tide::http::StatusCode::Created)
                 .body(tide::convert::json!({
@@ -151,10 +150,9 @@ async fn update_photo(mut req: Request<crate::State>) -> tide::Result<Response> 
     };
 
     let changed = conn.update_photo(&old_photo, &payload).await?;
-    let updated_photo = match conn.get_photo_by_id(old_photo.id, Published::All).await? {
-        Some((photo, _, _)) => Some(photo),
-        None => None,
-    };
+    let updated_photo = conn.get_photo_by_id(old_photo.id, Published::All)
+        .await?
+        .map(|(photo, _, _)| photo);
 
     Ok(Response::builder(tide::http::StatusCode::Ok)
         .body(tide::convert::json!({
