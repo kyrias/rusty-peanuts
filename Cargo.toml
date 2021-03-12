@@ -14,16 +14,16 @@ serde = { version = "1.0.124", features = ["derive"] }
 sqlx = { version = "0.5.1", features = ["runtime-async-std-rustls", "postgres", "json", "offline", "time"] }
 num_cpus = "1.13.0"
 serde_json = "1.0.64"
-async-trait = "0.1.47"
+async-trait = "0.1.48"
 dotenv = "0.15.0"
 tera = { version = "1.7.0", default-features = false, features = ["builtins"] }
 time = { version = "0.2.25", default-features = false, features = ["serde"] }
-serde_qs = "0.8.2"
+serde_qs = "0.8.3"
 percent-encoding = "2.1.0"
+sitemap = "0.4.1"
 structopt = "0.3.21"
 
 rusty-peanuts-api-structs = { path = "rusty-peanuts-api-structs" }
-sitemap = "0.4.1"
 
 [workspace]
 members = ["rusty-peanuts-api-structs", "rusty-peanuts-cli"]
