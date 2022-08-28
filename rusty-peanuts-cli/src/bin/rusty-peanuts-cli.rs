@@ -228,10 +228,9 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         }
     }
 
-    let credentials = Credentials::new(
+    let credentials = Credentials::from_env_specific(
         Some(&args.s3_access_key_id),
         Some(&args.s3_secret_access_key),
-        None,
         None,
         None,
     )
