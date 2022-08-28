@@ -24,7 +24,7 @@ async fn allowed_publish_status(
     let published = match req.cookie("secret-key") {
         Some(secret_key) => {
             tide::log::info!("secret key found");
-            if conn.valid_secret_key(&secret_key.value()).await? {
+            if conn.valid_secret_key(secret_key.value()).await? {
                 tide::log::info!("valid");
                 Published::All
             } else {
@@ -54,7 +54,7 @@ async fn gallery(req: Request<crate::State>) -> tide::Result<Response> {
     let tagged = req
         .param("tagged")
         .map(|tag| {
-            percent_encoding::percent_decode_str(&tag)
+            percent_encoding::percent_decode_str(tag)
                 .decode_utf8_lossy()
                 .to_string()
         })

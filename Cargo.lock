@@ -2480,6 +2480,7 @@ dependencies = [
  "sqlx",
  "structopt",
  "tera",
+ "thiserror",
  "tide",
  "time 0.3.14",
 ]

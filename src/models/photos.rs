@@ -4,7 +4,7 @@ use rusty_peanuts_api_structs::Source;
 
 pub type PhotoId = i32;
 
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Photo {
     pub id: PhotoId,
     pub file_stem: String,

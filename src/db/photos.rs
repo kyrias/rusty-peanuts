@@ -1,12 +1,16 @@
+use std::fmt::Write as _;
+
 use serde::Serialize;
 use sqlx::{Connection, FromRow, PgConnection};
 
-use crate::models;
 use rusty_peanuts_api_structs::Source;
+
+use crate::models;
+use crate::db::Error;
 
 pub type PhotoId = i32;
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub enum Page {
     Latest,
     Before(u32),
@@ -34,7 +38,7 @@ impl From<Option<i32>> for Page {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Published {
     All,
     OnlyPublished,
@@ -72,7 +76,7 @@ pub trait PhotoProvider {
         page: Page,
         tagged: &Option<Vec<String>>,
         published: Published,
-    ) -> Result<Vec<models::photos::Photo>, sqlx::Error>;
+    ) -> Result<Vec<models::photos::Photo>, Error>;
 
     /// Get the pagination IDs for a list of photos.
     ///
@@ -87,7 +91,7 @@ pub trait PhotoProvider {
         photos: &[models::photos::Photo],
         tagged: &Option<Vec<String>>,
         published: Published,
-    ) -> Result<(Option<i32>, Option<i32>), sqlx::Error>;
+    ) -> Result<(Option<i32>, Option<i32>), Error>;
 
     /// Get a single photo by ID.
     async fn get_photo_by_id(
@@ -110,7 +114,7 @@ pub trait PhotoProvider {
         &mut self,
         tagged: &Option<Vec<String>>,
         published: Published,
-    ) -> Result<Vec<(String, i64)>, sqlx::Error>;
+    ) -> Result<Vec<(String, i64)>, Error>;
 
     /// Get the IDs for all photos.
     ///
@@ -151,7 +155,7 @@ impl PhotoProvider for PgConnection {
         page: Page,
         tagged: &Option<Vec<String>>,
         published: Published,
-    ) -> Result<Vec<models::photos::Photo>, sqlx::Error> {
+    ) -> Result<Vec<models::photos::Photo>, Error> {
         let mut bind_count = 1;
         let mut bind_values = Vec::new();
         let mut query = r#"
@@ -170,25 +174,27 @@ impl PhotoProvider for PgConnection {
         tide::log::info!("Page: {:?}", page);
         match page {
             Page::Before(photo_id) => {
-                query.push_str(&format!(
+                write!(
+                    query,
                     r#"
                             WHERE
                                 id < ${}
-                        "#,
+                    "#,
                     bind_count,
-                ));
+                )?;
                 bind_count += 1;
                 bind_values.push(BindValue::I64(photo_id.into()));
             },
 
             Page::After(photo_id) => {
-                query.push_str(&format!(
+                write!(
+                    query,
                     r#"
                             WHERE
                                 id > ${}
-                        "#,
+                    "#,
                     bind_count,
-                ));
+                )?;
                 bind_count += 1;
                 bind_values.push(BindValue::I64(photo_id.into()));
             },
@@ -204,12 +210,13 @@ impl PhotoProvider for PgConnection {
         }
 
         if let Some(tags) = tagged {
-            query.push_str(&format!(
+            write!(
+                query,
                 r#"
                         AND photo.tags @> ${}::varchar[]
-                    "#,
+                "#,
                 bind_count,
-            ));
+            )?;
             bind_count += 1;
             bind_values.push(BindValue::ArrayString(&tags[..]));
         }
@@ -222,17 +229,18 @@ impl PhotoProvider for PgConnection {
             );
         }
 
-        query.push_str(&format!(
+        write!(
+            query,
             r#"
                     GROUP BY
                         id, title, file_stem, taken_timestamp, height_offset, tags, published
                     ORDER BY
                         id {}
                     LIMIT ${}
-                "#,
+            "#,
             page.order_direction(),
             bind_count,
-        ));
+        )?;
         // Necessary if any more bind variables are added in this function, but leaving it
         // uncommented leads to the complainer complaining, and attributes on expressions are
         // experimental so can't disable the lint without enabling that.
@@ -259,11 +267,11 @@ impl PhotoProvider for PgConnection {
         photos: &[models::photos::Photo],
         tagged: &Option<Vec<String>>,
         published: Published,
-    ) -> Result<(Option<i32>, Option<i32>), sqlx::Error> {
+    ) -> Result<(Option<i32>, Option<i32>), Error> {
         let previous = match photos.first() {
             Some(photo) => {
                 if self
-                    .get_photo_page(1, Page::After(photo.id as u32), &tagged, published)
+                    .get_photo_page(1, Page::After(photo.id as u32), tagged, published)
                     .await?
                     .is_empty()
                 {
@@ -278,7 +286,7 @@ impl PhotoProvider for PgConnection {
         let next = match photos.last() {
             Some(photo) => {
                 if self
-                    .get_photo_page(1, Page::Before(photo.id as u32), &tagged, published)
+                    .get_photo_page(1, Page::Before(photo.id as u32), tagged, published)
                     .await?
                     .is_empty()
                 {
@@ -448,7 +456,7 @@ impl PhotoProvider for PgConnection {
         &mut self,
         tagged: &Option<Vec<String>>,
         published: Published,
-    ) -> Result<Vec<(String, i64)>, sqlx::Error> {
+    ) -> Result<Vec<(String, i64)>, Error> {
         let bind_count = 1;
         let mut bind_values = Vec::new();
 
@@ -463,12 +471,13 @@ impl PhotoProvider for PgConnection {
         .to_string();
 
         if let Some(tags) = tagged {
-            query.push_str(&format!(
+            write!(
+                query,
                 r#"
                         AND photo.tags @> ${}::varchar[]
-                    "#,
+                "#,
                 bind_count,
-            ));
+            )?;
             // Necessary if any more bind variables are added in this function, but leaving it
             // uncommented leads to the complainer complaining, and attributes on expressions are
             // experimental so can't disable the lint without enabling that.

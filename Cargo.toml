@@ -24,6 +24,7 @@ sitemap = "0.4.1"
 structopt = "0.3.26"
 
 rusty-peanuts-api-structs = { path = "rusty-peanuts-api-structs" }
+thiserror = "1.0.32"
 
 [workspace]
 members = ["rusty-peanuts-api-structs", "rusty-peanuts-cli"]
