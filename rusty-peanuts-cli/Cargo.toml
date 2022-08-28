@@ -6,20 +6,20 @@ edition = "2018"
 default-run = "rusty-peanuts-cli"
 
 [dependencies]
-futures-lite = "1.11.3"
-image = "0.23.14"
-isahc = { version = "1.1.0", features = ["static-ssl"] }
-mozjpeg = "0.8.24"
-tiff = "0.6.1"
-rust-s3 = { version = "0.27.0-beta8", default-features = false, features = ["with-async-std"] }
 async-std = { version = "1.9.0", features = ["attributes", "unstable"] }
-surf = "2.2.0"
-serde = "1.0.124"
-quick-xml = { version = "0.22.0", features = ["serialize"] }
-env_logger = "0.8.3"
-log = "0.4.14"
+aws-creds = { version = "0.30.0", features = ["http-credentials", "rustls-tls", "attohttpc"], default-features = false }
 dotenv = "0.15.0"
-structopt = "0.3.21"
-serde_json = "1.0.64"
-
+env_logger = "0.9.0"
+futures-lite = "1.11.3"
+image = "0.24.3"
+isahc = { version = "1.1.0", features = ["static-ssl"] }
+log = "0.4.14"
+mozjpeg = "0.9.4"
+quick-xml = { version = "0.24.0", features = ["serialize"] }
+rust-s3 = { version = "0.32.3", default-features = false, features = ["with-async-std"] }
 rusty-peanuts-api-structs = { path = "../rusty-peanuts-api-structs" }
+serde = "1.0.124"
+serde_json = "1.0.64"
+structopt = "0.3.21"
+surf = "2.2.0"
+tiff = "0.7.3"

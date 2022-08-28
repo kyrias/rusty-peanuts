@@ -11,14 +11,14 @@ edition = "2018"
 tide = { version = "0.16.0", default-features = false, features = ["h1-server", "cookies", "logger"] }
 async-std = { version = "1.9.0", features = ["attributes"] }
 serde = { version = "1.0.124", features = ["derive"] }
-sqlx = { version = "0.5.1", features = ["runtime-async-std-rustls", "postgres", "json", "offline", "time"] }
+sqlx = { version = "0.6.1", features = ["runtime-async-std-rustls", "postgres", "json", "offline", "time"] }
 num_cpus = "1.13.0"
 serde_json = "1.0.64"
 async-trait = "0.1.48"
 dotenv = "0.15.0"
 tera = { version = "1.7.0", default-features = false, features = ["builtins"] }
-time = { version = "0.2.25", default-features = false, features = ["serde"] }
-serde_qs = "0.8.3"
+time = { version = "0.3.14", default-features = false, features = ["serde"] }
+serde_qs = "0.10.1"
 percent-encoding = "2.1.0"
 sitemap = "0.4.1"
 structopt = "0.3.21"

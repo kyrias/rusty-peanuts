@@ -42,7 +42,6 @@ pub enum Published {
 
 #[derive(Debug)]
 enum BindValue<'a> {
-    U32(u32),
     I64(i64),
     ArrayString(&'a [String]),
 }
@@ -179,7 +178,7 @@ impl PhotoProvider for PgConnection {
                     bind_count,
                 ));
                 bind_count += 1;
-                bind_values.push(BindValue::U32(photo_id));
+                bind_values.push(BindValue::I64(photo_id.into()));
             },
 
             Page::After(photo_id) => {
@@ -191,7 +190,7 @@ impl PhotoProvider for PgConnection {
                     bind_count,
                 ));
                 bind_count += 1;
-                bind_values.push(BindValue::U32(photo_id));
+                bind_values.push(BindValue::I64(photo_id.into()));
             },
 
             Page::Latest => {
@@ -244,7 +243,6 @@ impl PhotoProvider for PgConnection {
 
         for value in bind_values {
             query = match value {
-                BindValue::U32(v) => query.bind(v),
                 BindValue::I64(v) => query.bind(v),
                 BindValue::ArrayString(v) => query.bind(v),
             };
@@ -255,7 +253,6 @@ impl PhotoProvider for PgConnection {
         photos.sort_by(|a, b| b.id.cmp(&a.id));
         Ok(photos)
     }
-
 
     async fn get_photo_pagination_ids(
         &mut self,
@@ -295,7 +292,6 @@ impl PhotoProvider for PgConnection {
 
         Ok((previous, next))
     }
-
 
     async fn get_photo_by_id(
         &mut self,
@@ -407,7 +403,6 @@ impl PhotoProvider for PgConnection {
         Ok(Some((photo.into(), newer_id, older_id)))
     }
 
-
     async fn get_photo_by_file_stem(
         &mut self,
         file_stem: &str,
@@ -448,7 +443,6 @@ impl PhotoProvider for PgConnection {
             Err(err) => Err(err),
         }
     }
-
 
     async fn get_photo_tags_with_counts(
         &mut self,
@@ -499,7 +493,6 @@ impl PhotoProvider for PgConnection {
 
         for value in bind_values {
             query = match value {
-                BindValue::U32(v) => query.bind(v),
                 BindValue::I64(v) => query.bind(v),
                 BindValue::ArrayString(v) => query.bind(v),
             };
@@ -509,7 +502,6 @@ impl PhotoProvider for PgConnection {
 
         Ok(tags_with_counts)
     }
-
 
     async fn get_all_photo_ids(&mut self, published: Published) -> Result<Vec<i32>, sqlx::Error> {
         let mut query = r#"
@@ -540,7 +532,6 @@ impl PhotoProvider for PgConnection {
 
         Ok(ids.into_iter().map(|(id,)| id).collect())
     }
-
 
     async fn insert_photo(
         &mut self,
@@ -588,7 +579,6 @@ impl PhotoProvider for PgConnection {
 
         Ok(res.id)
     }
-
 
     async fn update_photo(
         &mut self,
@@ -694,7 +684,6 @@ impl PhotoProvider for PgConnection {
         Ok(changed)
     }
 
-
     async fn set_photo_published_state(
         &mut self,
         photo_id: PhotoId,
@@ -717,7 +706,6 @@ impl PhotoProvider for PgConnection {
 
         Ok(())
     }
-
 
     async fn set_photo_height_offset(
         &mut self,

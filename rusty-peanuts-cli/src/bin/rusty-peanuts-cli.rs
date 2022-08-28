@@ -2,7 +2,6 @@ use std::io::Seek;
 
 use async_std::task::JoinHandle;
 use futures_lite::stream::StreamExt;
-use image::GenericImageView;
 use s3::bucket::Bucket;
 use s3::creds::Credentials;
 use structopt::StructOpt;
@@ -186,10 +185,11 @@ async fn upload_transcoded_photo(
     log::info!("Uploading resized image of size {}x{}", width, height);
 
     let target_path = format!("{}/{}.{}x{}.jpeg", file_stem, file_stem, width, height);
-    let (_, code) = bucket
+    let response = bucket
         .put_object_with_content_type(&target_path, &data, "image/jpeg")
         .await
         .expect("could not upload file");
+    let code = response.status_code();
     assert!(code >= 200 && code < 300);
     log::info!(
         "Uploading resized image of size {}x{} finished",
@@ -244,7 +244,7 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         .expect("couldn't get region name from region endpoint")
         .to_string();
 
-    let mut bucket = Bucket::new_with_path_style(
+    let mut bucket = Bucket::new(
         &args.s3_bucket,
         s3::Region::Custom {
             region: s3_region_name,
@@ -252,7 +252,8 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         },
         credentials,
     )
-    .expect("couldn't create S3 bucket instance");
+    .expect("couldn't create S3 bucket instance")
+    .with_path_style();
     bucket.add_header("x-amz-acl", "public-read");
     bucket.add_header("Cache-Control", "max-age=31536000");
 
