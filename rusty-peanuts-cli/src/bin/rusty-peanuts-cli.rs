@@ -254,6 +254,7 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
     )
     .expect("couldn't create S3 bucket instance");
     bucket.add_header("x-amz-acl", "public-read");
+    bucket.add_header("Cache-Control", "max-age=31536000");
 
     let mut file = std::fs::File::open(&args.file_path).expect("couldn't open photo file");
 
