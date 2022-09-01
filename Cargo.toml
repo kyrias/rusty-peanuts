@@ -25,6 +25,7 @@ structopt = "0.3.26"
 
 rusty-peanuts-api-structs = { path = "rusty-peanuts-api-structs" }
 thiserror = "1.0.32"
+html-minifier = "3.0.15"
 
 [workspace]
 members = ["rusty-peanuts-api-structs", "rusty-peanuts-cli"]

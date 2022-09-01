@@ -5,8 +5,8 @@ use sqlx::{Connection, FromRow, PgConnection};
 
 use rusty_peanuts_api_structs::Source;
 
-use crate::models;
 use crate::db::Error;
+use crate::models;
 
 pub type PhotoId = i32;
 

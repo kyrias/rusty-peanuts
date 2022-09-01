@@ -5,6 +5,8 @@ use tide::{Request, Response};
 use crate::db::photos::{PhotoProvider, Published};
 use crate::db::secret_keys::SecretKeyProvider;
 
+mod utils;
+
 pub(in super::super) fn mount(route: &mut tide::Server<crate::State>) {
     route.at("/").get(gallery);
     route.at("/sitemap.xml").get(sitemap);
@@ -138,10 +140,10 @@ async fn gallery(req: Request<crate::State>) -> tide::Result<Response> {
     context.insert("oldest_qs", &oldest_qs);
     context.insert("tags", &tags);
 
-    let body = state.tera.render("gallery.html", &context)?;
+    let rendered = utils::render(state, "gallery.html", &context)?;
     let res = Response::builder(tide::http::StatusCode::Ok)
         .content_type("text/html")
-        .body(body)
+        .body(rendered)
         .build();
     Ok(res)
 }
@@ -178,7 +180,7 @@ async fn sitemap(req: Request<crate::State>) -> tide::Result<Response> {
 async fn photo_internal(
     req: Request<crate::State>,
     mut context: tera::Context,
-    template: &str,
+    template: &'static str,
 ) -> tide::Result<Response> {
     let state = req.state();
     let mut conn = state.db.acquire().await?;
@@ -208,10 +210,10 @@ async fn photo_internal(
     }
     context.insert("photo", &photo);
 
-    let body = state.tera.render(template, &context)?;
+    let rendered = utils::render(state, template, &context)?;
     let res = Response::builder(tide::http::StatusCode::Ok)
         .content_type("text/html")
-        .body(body)
+        .body(rendered)
         .build();
     Ok(res)
 }
