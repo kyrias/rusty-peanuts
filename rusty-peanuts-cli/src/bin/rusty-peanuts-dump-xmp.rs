@@ -10,9 +10,7 @@ fn get_format(file: &std::fs::File) -> image::ImageFormat {
         .with_guessed_format()
         .expect("couldn't guess file format");
 
-    let format = reader.format().expect("couldn't get guessed file format");
-
-    format
+    reader.format().expect("couldn't get guessed file format")
 }
 
 #[async_std::main]
@@ -42,7 +40,7 @@ async fn main() -> std::io::Result<()> {
 
             std::fs::File::create(&format!("xmp.{}.xml", file_name))
                 .expect("could not create XMP metadata file")
-                .write(xmp_xml.as_bytes())
+                .write_all(xmp_xml.as_bytes())
                 .expect("could not write XMP metadata to file");
         },
         format => {

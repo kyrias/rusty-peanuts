@@ -190,7 +190,7 @@ async fn upload_transcoded_photo(
         .await
         .expect("could not upload file");
     let code = response.status_code();
-    assert!(code >= 200 && code < 300);
+    assert!((200..300).contains(&code));
     log::info!(
         "Uploading resized image of size {}x{} finished",
         width,
@@ -198,8 +198,8 @@ async fn upload_transcoded_photo(
     );
 
     Source {
-        width: width,
-        height: height,
+        width,
+        height,
         url: format!("{}/{}", args.static_host, target_path),
     }
 }
@@ -238,7 +238,7 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
 
     let s3_region_name = args
         .s3_region_endpoint
-        .splitn(2, ".")
+        .split('.')
         .next()
         .expect("couldn't get region name from region endpoint")
         .to_string();
@@ -299,7 +299,7 @@ async fn upload_photo(args: UploadArgs, update: bool) -> std::io::Result<()> {
         taken_timestamp: Some(image_create_datetime),
         title: image_title,
         tags: image_tags,
-        sources: sources,
+        sources,
     };
 
     log::info!("Sending photo payload to rusty-peanuts API");

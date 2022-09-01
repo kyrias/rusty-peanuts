@@ -32,7 +32,7 @@ struct Description {
 }
 
 #[derive(Debug, Deserialize)]
-struct RDF {
+struct Rdf {
     #[serde(rename = "Description")]
     description: Vec<Description>,
 }
@@ -40,7 +40,7 @@ struct RDF {
 #[derive(Debug, Deserialize)]
 struct XmpMeta {
     #[serde(rename = "RDF")]
-    rdf: RDF,
+    rdf: Rdf,
 }
 
 pub fn get_metadata<R: std::io::Read + std::io::Seek>(
