@@ -1,10 +1,12 @@
 use std::io::Read;
 use std::sync::Arc;
 
+use opentelemetry_tide::TideExt;
 use structopt::StructOpt;
 
 pub mod db;
 pub mod models;
+pub mod telemetry;
 pub mod web;
 
 #[derive(Clone, Debug)]
@@ -18,12 +20,14 @@ pub struct State {
 #[derive(Debug)]
 pub enum Error {
     TemplateParseError(tera::Error),
+    TelemetryInitError(anyhow::Error),
 }
 
 impl From<Error> for i32 {
     fn from(error: Error) -> i32 {
         match error {
             Error::TemplateParseError(_) => 3,
+            Error::TelemetryInitError(_) => 4,
         }
     }
 }
@@ -34,16 +38,15 @@ impl std::fmt::Display for Error {
             Error::TemplateParseError(err) => {
                 write!(f, "Template parsing error: {}", err)
             },
+            Error::TelemetryInitError(err) => {
+                write!(f, "Failed to init telemetry: {}", err)
+            },
         }
     }
 }
 
 #[derive(Debug, StructOpt)]
 pub struct Args {
-    /// Log level.
-    #[structopt(long, default_value = "INFO", env = "RUSTY_PEANUTS_LOG_LEVEL")]
-    log_level: tide::log::LevelFilter,
-
     /// Host address to bind to.
     #[structopt(long, default_value = "localhost", env = "RUSTY_PEANUTS_BIND_ADDRESS")]
     address: String,
@@ -85,7 +88,7 @@ pub async fn main() -> Result<(), Error> {
     dotenv::dotenv().ok();
     let args = Arc::new(Args::from_args());
 
-    tide::log::with_level(args.log_level);
+    telemetry::init().map_err(Error::TelemetryInitError)?;
 
     let pool = db::get_pool(&args.database_url)
         .await
@@ -119,6 +122,8 @@ pub async fn main() -> Result<(), Error> {
         cache_busting_string,
     };
     let mut app = tide::with_state(state);
+
+    app.with_default_tracing_middleware();
 
     web::mount(&mut app);
 

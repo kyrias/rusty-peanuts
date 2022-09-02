@@ -4,28 +4,34 @@ version = "0.1.0"
 authors = ["Johannes Löthberg <johannes@kyriasis.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2018"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tide = { version = "0.16.0", default-features = false, features = ["h1-server", "cookies", "logger"] }
+anyhow = { version = "1.0.63", features = ["backtrace"] }
 async-std = { version = "1.12.0", features = ["attributes"] }
-serde = { version = "1.0.144", features = ["derive"] }
-sqlx = { version = "0.6.1", features = ["runtime-async-std-rustls", "postgres", "json", "offline", "time"] }
-num_cpus = "1.13.1"
-serde_json = "1.0.85"
 async-trait = "0.1.57"
 dotenv = "0.15.0"
-tera = { version = "1.17.0", default-features = false, features = ["builtins"] }
-time = { version = "0.3.14", default-features = false, features = ["serde"] }
-serde_qs = "0.10.1"
-percent-encoding = "2.1.0"
-sitemap = "0.4.1"
-structopt = "0.3.26"
-
-rusty-peanuts-api-structs = { path = "rusty-peanuts-api-structs" }
-thiserror = "1.0.32"
 html-minifier = "3.0.15"
+num_cpus = "1.13.1"
+opentelemetry = { version = "0.17.0", features = ["rt-async-std", "serialize"] }
+opentelemetry-otlp = { version = "0.10.0", default-features = false, features = ["trace", "grpc-sys", "openssl"] }
+opentelemetry-tide = { git = "https://github.com/kyrias/opentelemetry-tide", branch = "disable-default-dependencies" }
+percent-encoding = "2.1.0"
+rusty-peanuts-api-structs = { path = "rusty-peanuts-api-structs" }
+serde = { version = "1.0.144", features = ["derive"] }
+serde_json = "1.0.85"
+serde_qs = "0.10.1"
+sitemap = "0.4.1"
+sqlx = { version = "0.6.1", features = ["runtime-async-std-rustls", "postgres", "json", "offline", "time"] }
+structopt = "0.3.26"
+tera = { version = "1.17.0", default-features = false, features = ["builtins"] }
+thiserror = "1.0.32"
+tide = { version = "0.16.0", default-features = false, features = ["h1-server", "cookies"] }
+time = { version = "0.3.14", default-features = false, features = ["serde"] }
+tracing = { version = "0.1.36", features = ["async-await"] }
+tracing-opentelemetry = { version = "0.17.4", default-features = false }
+tracing-subscriber = { version = "0.3.15", features = ["json", "parking_lot", "env-filter"] }
+url = "2.2.2"
 
 [workspace]
 members = ["rusty-peanuts-api-structs", "rusty-peanuts-cli"]
