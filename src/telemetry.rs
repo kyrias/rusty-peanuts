@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, io};
 
 use anyhow::{Context, Result};
 use opentelemetry::{
@@ -28,7 +28,7 @@ pub(crate) fn init() -> Result<()> {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::fmt::layer()
-                .compact()
+                .with_writer(io::stderr)
                 .with_filter(EnvFilter::from_default_env()),
         )
         .with(tracing_opentelemetry::layer().with_tracer(tracer))
