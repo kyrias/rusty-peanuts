@@ -13,7 +13,9 @@ use opentelemetry::{
 };
 use opentelemetry_otlp::WithExportConfig;
 use tracing_subscriber::{
-    fmt::time::UtcTime, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt,
+    fmt::{format::FmtSpan, time::UtcTime},
+    prelude::__tracing_subscriber_SubscriberExt,
+    util::SubscriberInitExt,
     EnvFilter, Layer,
 };
 use url::Url;
@@ -27,13 +29,22 @@ pub(crate) fn init() -> Result<()> {
 
     let tracer = new_tracer().context("Failed to create tracer")?;
 
-    tracing_subscriber::registry()
-        .with(
-            tracing_subscriber::fmt::layer()
-                .with_writer(io::stderr)
-                .with_timer(UtcTime::rfc_3339())
-                .with_filter(EnvFilter::from_default_env()),
+    let fmt_env_filter = EnvFilter::builder()
+        .with_default_directive(
+            "info"
+                .parse()
+                .context("Failed to parse default EnvFilter directives")?,
         )
+        .with_env_var("RUSTY_PEANUTS_LOG_LEVEL")
+        .from_env_lossy();
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        .with_writer(io::stderr)
+        .with_timer(UtcTime::rfc_3339())
+        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+        .with_filter(fmt_env_filter);
+
+    tracing_subscriber::registry()
+        .with(fmt_layer)
         .with(tracing_opentelemetry::layer().with_tracer(tracer))
         .try_init()
         .context("Failed to set global default tracing subscriber")?;
