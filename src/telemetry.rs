@@ -43,9 +43,21 @@ pub(crate) fn init() -> Result<()> {
         .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
         .with_filter(fmt_env_filter);
 
+    let otel_env_filter = EnvFilter::builder()
+        .with_default_directive(
+            "trace,polling=info"
+                .parse()
+                .context("Failed to parse default EnvFilter directives")?,
+        )
+        .with_env_var("RUSTY_PEANUTS_TRACE_LEVEL")
+        .from_env_lossy();
+    let otel_layer = tracing_opentelemetry::layer()
+        .with_tracer(tracer)
+        .with_filter(otel_env_filter);
+
     tracing_subscriber::registry()
         .with(fmt_layer)
-        .with(tracing_opentelemetry::layer().with_tracer(tracer))
+        .with(otel_layer)
         .try_init()
         .context("Failed to set global default tracing subscriber")?;
 
