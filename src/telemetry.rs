@@ -12,7 +12,8 @@ use opentelemetry::{
 };
 use opentelemetry_otlp::WithExportConfig;
 use tracing_subscriber::{
-    prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer,
+    fmt::time::UtcTime, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt,
+    EnvFilter, Layer,
 };
 use url::Url;
 
@@ -29,6 +30,7 @@ pub(crate) fn init() -> Result<()> {
         .with(
             tracing_subscriber::fmt::layer()
                 .with_writer(io::stderr)
+                .with_timer(UtcTime::rfc_3339())
                 .with_filter(EnvFilter::from_default_env()),
         )
         .with(tracing_opentelemetry::layer().with_tracer(tracer))

@@ -30,7 +30,7 @@ tide = { version = "0.16.0", default-features = false, features = ["h1-server", 
 time = { version = "0.3.14", default-features = false, features = ["serde"] }
 tracing = { version = "0.1.36", features = ["async-await"] }
 tracing-opentelemetry = { version = "0.17.4", default-features = false }
-tracing-subscriber = { version = "0.3.15", features = ["json", "parking_lot", "env-filter"] }
+tracing-subscriber = { version = "0.3.15", features = ["json", "parking_lot", "env-filter", "time"] }
 url = "2.2.2"
 
 [workspace]
