@@ -1,4 +1,5 @@
 use sqlx::PgConnection;
+use tracing::instrument;
 
 #[async_trait::async_trait]
 pub trait SecretKeyProvider {
@@ -7,6 +8,7 @@ pub trait SecretKeyProvider {
 
 #[async_trait::async_trait]
 impl SecretKeyProvider for PgConnection {
+    #[instrument(skip_all)]
     async fn valid_secret_key(&mut self, secret_key: &str) -> Result<bool, sqlx::Error> {
         let secret_keys = sqlx::query!(
             r#"

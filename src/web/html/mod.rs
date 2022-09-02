@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::PgConnection;
 use tide::{Request, Response};
+use tracing::instrument;
 
 use crate::db::photos::{PhotoProvider, Published};
 use crate::db::secret_keys::SecretKeyProvider;
@@ -19,18 +20,19 @@ pub(in super::super) fn mount(route: &mut tide::Server<crate::State>) {
         .get(single_photo_multiple_times);
 }
 
+#[instrument(skip_all)]
 async fn allowed_publish_status(
     req: &Request<crate::State>,
     conn: &mut PgConnection,
 ) -> Result<Published, sqlx::Error> {
     let published = match req.cookie("secret-key") {
         Some(secret_key) => {
-            tide::log::info!("secret key found");
+            let span = tracing::info_span!("Found secret key in request cookies");
             if conn.valid_secret_key(secret_key.value()).await? {
-                tide::log::info!("valid");
+                span.record("status", "valid");
                 Published::All
             } else {
-                tide::log::info!("invalid");
+                span.record("status", "invalid");
                 Published::OnlyPublished
             }
         },
@@ -47,6 +49,7 @@ struct GalleryQueryParams {
     offset: Option<i32>,
 }
 
+#[instrument(skip_all)]
 async fn gallery(req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
     let mut conn = state.db.acquire().await?;
@@ -148,6 +151,7 @@ async fn gallery(req: Request<crate::State>) -> tide::Result<Response> {
     Ok(res)
 }
 
+#[instrument(skip_all)]
 async fn sitemap(req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
     let mut conn = state.db.acquire().await?;
@@ -177,6 +181,7 @@ async fn sitemap(req: Request<crate::State>) -> tide::Result<Response> {
     Ok(res)
 }
 
+#[instrument(skip_all)]
 async fn photo_internal(
     req: Request<crate::State>,
     mut context: tera::Context,
@@ -218,6 +223,7 @@ async fn photo_internal(
     Ok(res)
 }
 
+#[instrument(skip_all)]
 async fn single_photo(req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
     let mut context = tera::Context::new();
@@ -231,6 +237,7 @@ async fn single_photo(req: Request<crate::State>) -> tide::Result<Response> {
     photo_internal(req, context, "photo.html").await
 }
 
+#[instrument(skip_all)]
 async fn single_photo_multiple_times(req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
     let mut context = tera::Context::new();

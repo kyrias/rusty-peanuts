@@ -2,6 +2,7 @@ use std::fmt::Write as _;
 
 use serde::Serialize;
 use sqlx::{Connection, FromRow, PgConnection};
+use tracing::{info, instrument};
 
 use rusty_peanuts_api_structs::Source;
 
@@ -149,6 +150,7 @@ pub trait PhotoProvider {
 
 #[async_trait::async_trait]
 impl PhotoProvider for PgConnection {
+    #[instrument(skip(self))]
     async fn get_photo_page(
         &mut self,
         limit: i64,
@@ -171,7 +173,6 @@ impl PhotoProvider for PgConnection {
         "#
         .to_string();
 
-        tide::log::info!("Page: {:?}", page);
         match page {
             Page::Before(photo_id) => {
                 write!(
@@ -262,6 +263,7 @@ impl PhotoProvider for PgConnection {
         Ok(photos)
     }
 
+    #[instrument(skip(self, photos))]
     async fn get_photo_pagination_ids(
         &mut self,
         photos: &[models::photos::Photo],
@@ -301,6 +303,7 @@ impl PhotoProvider for PgConnection {
         Ok((previous, next))
     }
 
+    #[instrument(skip(self))]
     async fn get_photo_by_id(
         &mut self,
         photo_id: PhotoId,
@@ -411,6 +414,7 @@ impl PhotoProvider for PgConnection {
         Ok(Some((photo.into(), newer_id, older_id)))
     }
 
+    #[instrument(skip(self))]
     async fn get_photo_by_file_stem(
         &mut self,
         file_stem: &str,
@@ -452,6 +456,7 @@ impl PhotoProvider for PgConnection {
         }
     }
 
+    #[instrument(skip(self))]
     async fn get_photo_tags_with_counts(
         &mut self,
         tagged: &Option<Vec<String>>,
@@ -512,6 +517,7 @@ impl PhotoProvider for PgConnection {
         Ok(tags_with_counts)
     }
 
+    #[instrument(skip(self))]
     async fn get_all_photo_ids(&mut self, published: Published) -> Result<Vec<i32>, sqlx::Error> {
         let mut query = r#"
             SELECT
@@ -542,6 +548,7 @@ impl PhotoProvider for PgConnection {
         Ok(ids.into_iter().map(|(id,)| id).collect())
     }
 
+    #[instrument(skip(self))]
     async fn insert_photo(
         &mut self,
         photo: &models::photos::Photo,
@@ -589,6 +596,7 @@ impl PhotoProvider for PgConnection {
         Ok(res.id)
     }
 
+    #[instrument(skip(self))]
     async fn update_photo(
         &mut self,
         old_photo: &models::photos::Photo,
@@ -598,7 +606,11 @@ impl PhotoProvider for PgConnection {
         let mut changed = false;
 
         if old_photo.taken_timestamp != new_photo.taken_timestamp {
-            tide::log::info!("Taken timestamp differs, updating");
+            info!(
+                timestamp.before = old_photo.taken_timestamp,
+                timestamp.after = new_photo.taken_timestamp,
+                "Taken timestamp differs, updating"
+            );
             changed = true;
             sqlx::query!(
                 r#"
@@ -617,7 +629,11 @@ impl PhotoProvider for PgConnection {
         }
 
         if old_photo.title != new_photo.title {
-            tide::log::info!("Title differs, updating");
+            info!(
+                title.before = old_photo.title,
+                title.after = new_photo.title,
+                "Title differs, updating"
+            );
             changed = true;
             sqlx::query!(
                 r#"
@@ -636,7 +652,11 @@ impl PhotoProvider for PgConnection {
         }
 
         if old_photo.tags != new_photo.tags {
-            tide::log::info!("Tags differ, updating");
+            info!(
+                tags.before = ?old_photo.tags,
+                tags.after = ?new_photo.tags,
+                "Tags differs, updating"
+            );
             changed = true;
             sqlx::query!(
                 r#"
@@ -656,7 +676,11 @@ impl PhotoProvider for PgConnection {
 
         if let Some(sources) = &new_photo.sources {
             if &old_photo.sources != sources {
-                tide::log::info!("Sources differ, updating");
+                info!(
+                    sources.before = ?old_photo.sources,
+                    sources.after = ?new_photo.sources,
+                    "Sources differs, updating"
+                );
                 changed = true;
                 sqlx::query!(
                     r#"
@@ -693,6 +717,7 @@ impl PhotoProvider for PgConnection {
         Ok(changed)
     }
 
+    #[instrument(skip(self))]
     async fn set_photo_published_state(
         &mut self,
         photo_id: PhotoId,
@@ -716,6 +741,7 @@ impl PhotoProvider for PgConnection {
         Ok(())
     }
 
+    #[instrument(skip(self))]
     async fn set_photo_height_offset(
         &mut self,
         photo_id: PhotoId,

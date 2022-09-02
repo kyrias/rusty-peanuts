@@ -1,4 +1,5 @@
 use tide::{Request, Response};
+use tracing::{info, instrument};
 
 use crate::db::photos::{PhotoProvider, Published};
 use crate::web::api::utils::validate_secret_key;
@@ -21,6 +22,7 @@ pub(super) fn mount(mut route: tide::Route<crate::State>) {
         .post(update_photo);
 }
 
+#[instrument(skip_all)]
 async fn get_photo(req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
     let mut conn = state
@@ -46,6 +48,7 @@ async fn get_photo(req: Request<crate::State>) -> tide::Result<Response> {
     Ok(res)
 }
 
+#[instrument(skip_all)]
 async fn create_photo(mut req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
     let mut conn = state
@@ -57,7 +60,7 @@ async fn create_photo(mut req: Request<crate::State>) -> tide::Result<Response> 
     require_valid_secret_key!(req, conn);
 
     let payload: PhotoPayload = req.body_json().await?;
-    tide::log::debug!("Received photo payload: {:#?}", payload);
+    info!(payload = ?payload, "Received valid payload");
 
     let sources = match payload.sources {
         Some(sources) => sources,
@@ -103,6 +106,7 @@ async fn create_photo(mut req: Request<crate::State>) -> tide::Result<Response> 
     }
 }
 
+#[instrument(skip_all)]
 async fn get_photo_by_file_stem(req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
     let mut conn = state
@@ -128,6 +132,7 @@ async fn get_photo_by_file_stem(req: Request<crate::State>) -> tide::Result<Resp
     Ok(res)
 }
 
+#[instrument(skip_all)]
 async fn update_photo(mut req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
     let mut conn = state
@@ -139,7 +144,7 @@ async fn update_photo(mut req: Request<crate::State>) -> tide::Result<Response> 
     require_valid_secret_key!(req, conn);
 
     let payload: PhotoPayload = req.body_json().await?;
-    tide::log::debug!("Received payload: {:#?}", payload);
+    info!(payload = ?payload, "Received valid payload");
 
     let file_stem = req.param("file_stem")?;
     let old_photo = match conn
@@ -165,6 +170,7 @@ async fn update_photo(mut req: Request<crate::State>) -> tide::Result<Response> 
         .build())
 }
 
+#[instrument(skip_all)]
 async fn update_photo_published(mut req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
     let mut conn = state
@@ -176,7 +182,6 @@ async fn update_photo_published(mut req: Request<crate::State>) -> tide::Result<
     require_valid_secret_key!(req, conn);
 
     let published: bool = req.body_json().await?;
-    tide::log::debug!("Received payload: {:#?}", published);
 
     let photo_id: i32 = req.param("photo_id")?.parse()?;
     let photo = match conn.get_photo_by_id(photo_id, Published::All).await? {
@@ -193,6 +198,7 @@ async fn update_photo_published(mut req: Request<crate::State>) -> tide::Result<
         .build())
 }
 
+#[instrument(skip_all)]
 async fn update_photo_height_offset(mut req: Request<crate::State>) -> tide::Result<Response> {
     let state = req.state();
     let mut conn = state
@@ -204,7 +210,6 @@ async fn update_photo_height_offset(mut req: Request<crate::State>) -> tide::Res
     require_valid_secret_key!(req, conn);
 
     let height_offset: u8 = req.body_json().await?;
-    tide::log::debug!("Received payload: {:#?}", height_offset);
 
     let photo_id: i32 = req.param("photo_id")?.parse()?;
     let photo = match conn.get_photo_by_id(photo_id, Published::All).await? {
