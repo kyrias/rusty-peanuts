@@ -2839,6 +2839,7 @@ dependencies = [
  "num_cpus",
  "opentelemetry",
  "opentelemetry-otlp",
+ "opentelemetry-semantic-conventions",
  "opentelemetry-tide",
  "percent-encoding",
  "rusty-peanuts-api-structs",

@@ -6,9 +6,10 @@ use opentelemetry::{
     propagation::TextMapPropagator,
     sdk::{
         propagation::{BaggagePropagator, TextMapCompositePropagator, TraceContextPropagator},
-        trace as sdktrace,
+        trace as sdktrace, Resource,
     },
     trace::TraceError,
+    KeyValue,
 };
 use opentelemetry_otlp::WithExportConfig;
 use tracing_subscriber::{
@@ -82,5 +83,11 @@ fn new_tracer() -> Result<sdktrace::Tracer, TraceError> {
     opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(exporter)
+        .with_trace_config(
+            sdktrace::config().with_resource(Resource::new(vec![KeyValue::new(
+                opentelemetry_semantic_conventions::resource::SERVICE_NAME,
+                "rusty-peanuts",
+            )])),
+        )
         .install_batch(opentelemetry::runtime::AsyncStd)
 }

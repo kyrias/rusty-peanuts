@@ -15,6 +15,7 @@ html-minifier = "3.0.15"
 num_cpus = "1.13.1"
 opentelemetry = { version = "0.17.0", features = ["rt-async-std", "serialize"] }
 opentelemetry-otlp = { version = "0.10.0", default-features = false, features = ["trace", "grpc-sys", "openssl"] }
+opentelemetry-semantic-conventions = "0.9.0"
 opentelemetry-tide = { git = "https://github.com/kyrias/opentelemetry-tide", branch = "disable-default-dependencies" }
 percent-encoding = "2.1.0"
 rusty-peanuts-api-structs = { path = "rusty-peanuts-api-structs" }
