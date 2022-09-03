@@ -27,14 +27,18 @@ pub(crate) fn init() -> Result<()> {
     let propagator = new_propagator();
     global::set_text_map_propagator(propagator);
 
-    let tracer = new_tracer().context("Failed to create tracer")?;
-
     let fmt_env_filter = env_filter_merge_from_environment("info", "RUSTY_PEANUTS_LOG_LEVEL")?;
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_writer(io::stderr)
         .with_timer(UtcTime::rfc_3339())
         .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
         .with_filter(fmt_env_filter);
+
+    let tracer = if let Some(tracer) = new_tracer().context("Failed to create tracer")? {
+        tracer
+    } else {
+        return Ok(());
+    };
 
     let otel_env_filter =
         env_filter_merge_from_environment("trace,polling=off", "RUSTY_PEANUTS_TRACE_LEVEL")?;
@@ -81,8 +85,12 @@ fn new_propagator() -> impl TextMapPropagator {
     ])
 }
 
-fn new_tracer() -> Result<sdktrace::Tracer, TraceError> {
-    let endpoint = std::env::var(ENDPOINT).unwrap();
+fn new_tracer() -> Result<Option<sdktrace::Tracer>, TraceError> {
+    let endpoint = if let Ok(endpoint) = std::env::var(ENDPOINT) {
+        endpoint
+    } else {
+        return Ok(None);
+    };
     let endpoint = Url::parse(&endpoint).unwrap();
     std::env::remove_var(ENDPOINT);
 
@@ -110,7 +118,7 @@ fn new_tracer() -> Result<sdktrace::Tracer, TraceError> {
         .with_headers(headers)
         .with_tls(true);
 
-    opentelemetry_otlp::new_pipeline()
+    let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(exporter)
         .with_trace_config(
@@ -119,5 +127,7 @@ fn new_tracer() -> Result<sdktrace::Tracer, TraceError> {
                 "rusty-peanuts",
             )])),
         )
-        .install_batch(opentelemetry::runtime::AsyncStd)
+        .install_batch(opentelemetry::runtime::AsyncStd)?;
+
+    Ok(Some(tracer))
 }
