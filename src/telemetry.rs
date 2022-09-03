@@ -34,17 +34,15 @@ pub(crate) fn init() -> Result<()> {
         .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
         .with_filter(fmt_env_filter);
 
-    let tracer = if let Some(tracer) = new_tracer().context("Failed to create tracer")? {
-        tracer
+    let otel_layer = if let Some(tracer) = new_tracer().context("Failed to create tracer")? {
+        tracing_opentelemetry::layer().with_tracer(tracer).boxed()
     } else {
-        return Ok(());
-    };
-
-    let otel_env_filter =
-        env_filter_merge_from_environment("trace,polling=off", "RUSTY_PEANUTS_TRACE_LEVEL")?;
-    let otel_layer = tracing_opentelemetry::layer()
-        .with_tracer(tracer)
-        .with_filter(otel_env_filter);
+        tracing_opentelemetry::layer().boxed()
+    }
+    .with_filter(env_filter_merge_from_environment(
+        "trace,polling=off",
+        "RUSTY_PEANUTS_TRACE_LEVEL",
+    )?);
 
     tracing_subscriber::registry()
         .with(fmt_layer)
