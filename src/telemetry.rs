@@ -1,6 +1,6 @@
 use std::{collections::HashMap, io};
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use opentelemetry::{
     global,
     propagation::TextMapPropagator,
@@ -29,28 +29,15 @@ pub(crate) fn init() -> Result<()> {
 
     let tracer = new_tracer().context("Failed to create tracer")?;
 
-    let fmt_env_filter = EnvFilter::builder()
-        .with_default_directive(
-            "info"
-                .parse()
-                .context("Failed to parse default EnvFilter directives")?,
-        )
-        .with_env_var("RUSTY_PEANUTS_LOG_LEVEL")
-        .from_env_lossy();
+    let fmt_env_filter = env_filter_merge_from_environment("info", "RUSTY_PEANUTS_LOG_LEVEL")?;
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_writer(io::stderr)
         .with_timer(UtcTime::rfc_3339())
         .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
         .with_filter(fmt_env_filter);
 
-    let otel_env_filter = EnvFilter::builder()
-        .with_default_directive(
-            "trace,polling=info"
-                .parse()
-                .context("Failed to parse default EnvFilter directives")?,
-        )
-        .with_env_var("RUSTY_PEANUTS_TRACE_LEVEL")
-        .from_env_lossy();
+    let otel_env_filter =
+        env_filter_merge_from_environment("trace,polling=off", "RUSTY_PEANUTS_TRACE_LEVEL")?;
     let otel_layer = tracing_opentelemetry::layer()
         .with_tracer(tracer)
         .with_filter(otel_env_filter);
@@ -62,6 +49,26 @@ pub(crate) fn init() -> Result<()> {
         .context("Failed to set global default tracing subscriber")?;
 
     Ok(())
+}
+
+fn env_filter_merge_from_environment(
+    default_directives: &'static str,
+    env_var: &'static str,
+) -> Result<EnvFilter> {
+    let mut filter = EnvFilter::builder()
+        .parse(default_directives)
+        .with_context(|| anyhow!("Default directives were invalid: {default_directives}"))?;
+
+    if let Ok(env_value) = std::env::var(env_var) {
+        for env_directive in env_value.split(',') {
+            match env_directive.parse() {
+                Ok(directive) => filter = filter.add_directive(directive),
+                Err(err) => eprintln!("WARN ignoring log directive: {env_directive:?}: {err}"),
+            }
+        }
+    }
+
+    Ok(filter)
 }
 
 fn new_propagator() -> impl TextMapPropagator {
