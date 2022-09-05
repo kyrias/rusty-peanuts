@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = { version = "1.0.63", features = ["backtrace"] }
+anyhow = { version = "1.0.64", features = ["backtrace"] }
 async-std = { version = "1.12.0", features = ["attributes"] }
 async-trait = "0.1.57"
 dotenv = "0.15.0"
@@ -26,7 +26,7 @@ sitemap = "0.4.1"
 sqlx = { version = "0.6.1", features = ["runtime-async-std-rustls", "postgres", "json", "offline", "time"] }
 structopt = "0.3.26"
 tera = { version = "1.17.0", default-features = false, features = ["builtins"] }
-thiserror = "1.0.32"
+thiserror = "1.0.34"
 tide = { version = "0.16.0", default-features = false, features = ["h1-server", "cookies"] }
 time = { version = "0.3.14", default-features = false, features = ["serde"] }
 tracing = { version = "0.1.36", features = ["async-await"] }
