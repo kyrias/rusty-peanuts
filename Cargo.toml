@@ -16,7 +16,7 @@ num_cpus = "1.13.1"
 opentelemetry = { version = "0.17.0", features = ["rt-async-std", "serialize"] }
 opentelemetry-otlp = { version = "0.10.0", default-features = false, features = ["trace", "grpc-sys", "openssl"] }
 opentelemetry-semantic-conventions = "0.9.0"
-opentelemetry-tide = { git = "https://github.com/kyrias/opentelemetry-tide", branch = "disable-default-dependencies" }
+opentelemetry-tide = { git = "https://github.com/asaaki/opentelemetry-tide", rev = "da4988145ca5eb1ddf05fff3e2ebf495da6044ba" }
 percent-encoding = "2.1.0"
 rusty-peanuts-api-structs = { path = "rusty-peanuts-api-structs" }
 serde = { version = "1.0.144", features = ["derive"] }
